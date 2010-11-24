@@ -1,5 +1,8 @@
 body { font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif; font-size:100%; margin:0; padding:0; border:0; }
 
+a:link, a:visited { text-decoration:none; color:#000; background-color:#fffcba; border-radius:3px; -moz-border-radius:3px; -webkit-border-radius:3px; }
+a:hover { color:#666; }
+
 #logo { width:900px; height:273px; margin:1px auto 10px auto; background:#fff url(/images/phx_rising_logo.jpg); } 
 #wrapper { width:900px; margin:0 auto; clear:both; }
 #footer { font-family:Arial,sans-serif; font-size:0.7em; color:#c69207; width:900px; margin:30px auto; padding-top:6px; border-top:1px solid #ddd; clear:both;}
@@ -10,8 +13,8 @@ body { font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif; font-size:100%; ma
 
 #posts { width:640px; margin-right:10px; float:left; }
 .post { margin-bottom:1em; }
-.post_title_link, .post_title { position:relative; left:-0.6em; font-family:Arial,sans-serif; font-size:2em; font-weight:bold; text-decoration:none; color:#8c7d2a; padding:0 0.2em 0 0.1em; border-radius:0.3em; -moz-border-radius:0.3em; -webkit-border-radius:0.3em; text-shadow:1px 1px 3px #bdaf5c; }
-.post_title_link:hover { background-color:#8c7d2a; color:#fff; }
+.post_title_link, .post_title { position:relative; left:-0.6em; font-family:Arial,sans-serif; font-size:2em; font-weight:bold; text-decoration:none; color:#8c7d2a !important; background-color:transparent !important; padding:0 0.2em 0 0.1em; border-radius:0.3em; -moz-border-radius:0.3em; -webkit-border-radius:0.3em; text-shadow:1px 1px 3px #bdaf5c; }
+.post_title_link:hover { background-color:#8c7d2a !important; color:#fff !important; }
 .post_date { font-family:Arial,sans-serif; font-size:0.8em; color:#666; margin-top:-8px; }
 
 #info { width:244px; font-family:Arial,sans-serif; border-left:1px dotted #ddd; padding: 0 0 0 2px; margin:0 0 0 3px; float:left; clear:right; }
