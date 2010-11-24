@@ -9,7 +9,7 @@ a:hover { color:#666; }
 #footer div { width:140px; margin:0 auto; }
 
 .highlight { background-color:#edeac6; }
-.shell { width:590px; color:#dd0; background-color:#000; margin-bottom:1em; border:4px solid #99a; border-top:16px solid #99a; border-radius:0.3em; -moz-border-radius:0.3em; -webkit-border-radius:0.3em; }
+.shell { width:640px; color:#dd0; background-color:#000; margin-bottom:1em; border:4px solid #99a; border-top:16px solid #99a; overflow:scroll; border-radius:0.3em; -moz-border-radius:0.3em; -webkit-border-radius:0.3em; }
 
 #posts { width:640px; margin-right:10px; float:left; }
 .post { margin-bottom:1em; }
