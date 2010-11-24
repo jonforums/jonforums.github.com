@@ -1,0 +1,54 @@
+---
+layout: post
+---
+
+I mainly use [distribute](http://pypi.python.org/pypi/distribute/) or
+[pip](http://pypi.python.org/pypi/pip/) to manage Python packages on my Win7 machines.
+ And I'm pretty happy eventhough they don't provide many of the features of other
+package managers.
+
+Nice, but what does that have to do with building Python extensions?
+
+Two very nice Python-based templating libraries [Jinja2](http://jinja.pocoo.org/) and
+[Mako](http://pypi.python.org/pypi/Mako/) can take advantage of the native code based
+[MarkupSafe](http://pypi.python.org/pypi/MarkupSafe) module for increased performance.
+And you need a way to build MarkupSafe on your Windows system.
+
+Enter the [DevKit](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit) from
+the [RubyInstaller](http://rubyinstaller.org) project. While the DevKit's primary goal
+is to enable Ruby-on-Window's users to easily build native Ruby extensions, it's also
+quite useful as a general purpose Windows-based C/C++ toolchain.
+
+OK, you see where this is going, right? What's the punchline?
+
+First, create the following file in your `%USERPROFILE%` directory:
+
+{% highlight ini %}
+# file: %USERPROFILE%/pydistutils.cfg
+[build]
+compiler = mingw32
+{% endhighlight %}
+
+...and do the following in order to use both the DevKit and pip to build and
+install MarkupSafe and it's native library:
+
+<pre class="shell">
+C:\Users\Jon>\DevKit\devkitvars.bat
+Adding the DevKit to PATH...
+
+C:\Users\Jon>pip install markupsafe
+Downloading/unpacking markupsafe
+  Downloading MarkupSafe-0.11.tar.gz
+  Running setup.py egg_info for package markupsafe
+
+Installing collected packages: markupsafe
+  Running setup.py install for markupsafe
+
+    building 'markupsafe._speedups' extension
+    C:\DevKit\mingw\bin\gcc.exe -mno-cygwin -mdll -O -Wall -IC:\Python27\include -IC:\Python27\PC -c markupsafe/_speedups.c -o build\temp.win32-2.7\Release\markupsafe\_speedups.o
+    C:\DevKit\mingw\bin\gcc.exe -mno-cygwin -shared -s build\temp.win32-2.7\Release\markupsafe\_speedups.o build\temp.win32-2.7\Release\markupsafe\_speedups.def -LC:\Python27\libs -LC:\Python27\PCbuild -lpython27 -lmsvcr90 -o build\lib.win32-2.7\markupsafe\_speedups.pyd
+Successfully installed markupsafe
+Cleaning up...
+
+C:\Users\Jon>
+</pre>
