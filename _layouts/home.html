@@ -6,7 +6,13 @@ layout: default
 <div id="wrapper">
 	{{ content }}
 
-	<div id="info">
-		<div id="info_title">Categories</div>	
+  <div id="info">
+    {% unless site.categories == empty %}
+      <div id="info_title">Categories</div>
+    {% endunless %}
+
+    {% for c in site.categories %}
+      <div class="category">{{ c[0] | capitalize }} ({{ c[1] | size }})</div>
+    {% endfor %}
 	</div>	
 </div>

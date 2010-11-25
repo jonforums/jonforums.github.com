@@ -4,11 +4,11 @@ title: Jon's GitHub Home
 ---
 
 <div id="posts">
-  {% for post in site.posts %}
+  {% for p in site.posts %}
     <div class="post">
-      <a class="post_title_link" href="{{ post.url }}">{{ post.title }}</a>
-      {{ post.content }}
-	  <div class="post_date">Posted: {{ post.date }}</div>
+      <a class="post_title_link" href="{{ p.url }}">{{ p.title }}</a>
+      {{ p.content }}
+	    <div class="post_date">Posted: {{ p.date }}</div>
     </div>
   {% endfor %}
 </div>
