@@ -15,7 +15,9 @@ a:hover { color:#666; }
 .post { margin-bottom:1em; }
 .post_title_link, .post_title { position:relative; left:-0.6em; font-family:Arial,sans-serif; font-size:2em; font-weight:bold; text-decoration:none; color:#8c7d2a !important; background-color:transparent !important; padding:0 0.2em 0 0.1em; border-radius:0.3em; -moz-border-radius:0.3em; -webkit-border-radius:0.3em; text-shadow:1px 1px 3px #bdaf5c; }
 .post_title_link:hover { background-color:#8c7d2a !important; color:#fff !important; }
-.post_date { font-family:Arial,sans-serif; font-size:0.8em; color:#666; margin-top:-8px; }
+.post_date { font-family:Arial,sans-serif; font-size:0.8em; color:#666; margin-top:-6px; }
 
 #info { width:244px; font-family:Arial,sans-serif; border-left:1px dotted #ddd; padding: 0 0 0 2px; margin:0 0 0 3px; float:left; clear:right; }
-#info_title { font-size:1.3em; font-weight:bold; color:#8c7d2a; }
+#info_title { font-size:1.6em; font-weight:bold; color:#8c7d2a; margin:0 0 6px 3px; text-shadow:1px 1px 3px #bdaf5c; }
+
+.category { color:#ec8806; font-weight:bold; margin:0 0 3px 21px; }
