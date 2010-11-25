@@ -3,23 +3,27 @@ layout: post
 ---
 
 I mainly use [distribute](http://pypi.python.org/pypi/distribute/) or
-[pip](http://pypi.python.org/pypi/pip/) to manage Python packages on my Win7 machines.
- And I'm pretty happy eventhough they don't provide many of the features of other
-package managers.
+[pip](http://pypi.python.org/pypi/pip/) to manage Python packages on my Windows
+machines. And I'm pretty happy eventhough they don't provide many of the features of
+other package managers.
 
 Nice, but what does that have to do with building Python extensions?
 
 Two very nice Python-based templating libraries [Jinja2](http://jinja.pocoo.org/) and
-[Mako](http://pypi.python.org/pypi/Mako/) can take advantage of the native code based
-[MarkupSafe](http://pypi.python.org/pypi/MarkupSafe) module for increased performance.
-And you need a way to build MarkupSafe on your Windows system.
+[Mako](http://pypi.python.org/pypi/Mako/) can take advantage of the native code module
+in the [MarkupSafe](http://pypi.python.org/pypi/MarkupSafe) for increased performance.
+But you need a way to build `MarkupSafe` on your Windows system.
 
 Enter the [DevKit](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit) from
-the [RubyInstaller](http://rubyinstaller.org) project. While the DevKit's primary goal
+the [RubyInstaller](http://rubyinstaller.org) project. While the `DevKit`'s primary goal
 is to enable Ruby-on-Window's users to easily build native Ruby extensions, it's also
-quite useful as a general purpose Windows-based C/C++ toolchain.
+handy as a general purpose Windows-based C/C++ toolchain.
 
-OK, you see where this is going, right? What's the punchline?
+But you also need to find a way to tell `pip` to use the `DevKit` toolchain. Running
+`pip install --help` shows the `--install-option` and `--global-option` options,
+but there appears to be no way to tell `pip` which compiler toolchain to use.
+
+Or is there?
 
 First, create the following file in your `%USERPROFILE%` directory:
 
@@ -29,8 +33,8 @@ First, create the following file in your `%USERPROFILE%` directory:
 compiler = mingw32
 {% endhighlight %}
 
-...and do the following in order to use both the DevKit and pip to build and
-install MarkupSafe and it's native library:
+...and then execute the following in your shell. `Pip` uses the `DevKit` to build
+and install `MarkupSafe` and it's native library.
 
 <pre class="shell">
 C:\Users\Jon>\DevKit\devkitvars.bat
