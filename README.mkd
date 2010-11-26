@@ -1,0 +1,5 @@
+## TODO
+
+* format the posted time to be more readable
+* add back link to individiual posts layout
+* clickable categories that show just those posts
