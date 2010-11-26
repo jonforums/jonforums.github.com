@@ -27,7 +27,7 @@ Or is there?
 
 First, create the following file in your `%USERPROFILE%` directory:
 
-{% highlight ini %}
+{% highlight ini linenos %}
 # file: %USERPROFILE%/pydistutils.cfg
 [build]
 compiler = mingw32
