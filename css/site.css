@@ -1,6 +1,6 @@
 body { font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif; font-size:100%; margin:0; padding:0; border:0; }
 
-a:link, a:visited { text-decoration:none; color:#000; background-color:#fffcba; border-radius:3px; -moz-border-radius:3px; -webkit-border-radius:3px; }
+a:link, a:visited { text-decoration:none; color:#000; background-color:#fffcba; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
 a:hover { color:#6a1a13; }
 
 #logo { width:900px; height:273px; margin:1px auto 10px auto; background:#fff url(/images/phx_rising_logo.jpg); } 
@@ -8,8 +8,8 @@ a:hover { color:#6a1a13; }
 #footer { font-family:Arial,sans-serif; font-size:0.7em; color:#c69207; width:900px; margin:30px auto; padding-top:6px; border-top:1px solid #ddd; clear:both;}
 #footer div { width:140px; margin:0 auto; }
 
-.highlight { background-color:#edeac6; }
-.shell { width:640px; color:#dd0; background-color:#000; margin-bottom:1em; border:4px solid #99a; border-top:16px solid #99a; overflow:scroll; border-radius:0.3em; -moz-border-radius:0.3em; -webkit-border-radius:0.3em; }
+.highlight { background-color:#edeac6; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
+.shell { width:640px; color:#dd0; background-color:#000; margin-bottom:1em; border:4px solid #99a; border-top:16px solid #99a; overflow:auto; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
 
 #posts { width:640px; margin-right:10px; float:left; }
 .post { margin-bottom:1em; }
