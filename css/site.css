@@ -2,6 +2,8 @@ body { font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif; font-size:100%; ma
 
 a:link, a:visited { text-decoration:none; color:#000; background-color:#fffcba; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
 a:hover { color:#6a1a13; }
+a.home_link { display:inline-block; position:relative; left:-1em; margin-top:18px; color:#770000 !important; font-weight:bold !important; background-color:transparent !important; }
+a.home_link:hover { text-decoration:underline; }
 
 p { line-height:1.3; }
 

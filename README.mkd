@@ -1,4 +1,3 @@
 ## TODO
 
-* add back link to individiual posts layout
 * clickable categories that show just those posts
