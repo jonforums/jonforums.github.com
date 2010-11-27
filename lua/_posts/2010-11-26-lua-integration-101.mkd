@@ -1,0 +1,108 @@
+---
+layout: post
+---
+
+So you want to use Lua to script your C program?
+
+Here's a basic C code skeleton (hosting the Lua runtime) that allows you to run
+a Lua script via `host lua_script.lua` with the Lua script able to directly call
+the `say_something` function defined in the C host program.
+
+Assuming you have a C/C++ compiler such as the
+ [DevKit](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit) installed
+on your Windows box as well as the Lua headers and library, build the executable
+using something like:
+
+<pre class="shell">
+C:\>gcc -Wall -O3 -s -o host.exe -Ic:/lua/include -Lc:/lua/bin -llua51 host.c
+
+C:\>
+</pre>
+
+More details and examples in future posts.
+
+{% highlight c linenos %}
+/* file: host.c */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
+
+/* Variable arg function callable from a Lua script as:
+ *   say_something('A', 'gaggle', 'of', 5, 'args')
+ */
+static int
+say_something(lua_State* luaVM) {
+    int n = lua_gettop(luaVM);
+    int i;
+
+    if (n == 0) {
+        printf("no arguments");
+        return 0;
+    }
+
+    for (i = 1; i <= n; i++) {
+        if (!lua_isstring(luaVM, i)) {
+            lua_pushstring(luaVM, "[ERROR] argument must be a string or a number");
+            lua_error(luaVM);
+        }
+        printf("%s\n", lua_tostring(luaVM, i));
+    }
+
+    return 0;
+}
+
+static void
+print_usage(void) {
+    fprintf(stderr, "usage: %s lua_script\n", "main");
+    fflush(stderr);
+}
+
+static int
+check_args(int arg_count, char** arg_strings) {
+    if (arg_count != 2) {
+        print_usage();
+        return(0);
+    } else {
+        return(1);
+    }
+}
+
+static void
+err_message(const char* msg) {
+    fprintf(stderr, "%s\n", msg);
+    fflush(stderr);
+}
+
+int
+main(int argc, char** argv) {
+    if (!check_args(argc, argv)) return(EXIT_FAILURE);
+
+    /* Initialize Lua */
+    lua_State* luaVM = luaL_newstate();
+    if (luaVM == NULL) {
+        err_message("Cannot initialize Lua; exiting...");
+        return EXIT_FAILURE;
+    }
+
+    /* Stop the GC during Lua library (all std) initialization and function
+     * registrations. C functions that are callable from a Lua script must be
+     * registered with Lua.
+     */
+    lua_gc(luaVM, LUA_GCSTOP, 0);
+    luaL_openlibs(luaVM);
+    lua_register(luaVM, "say_something", say_something);
+    lua_gc(luaVM, LUA_GCRESTART, 0);
+
+    /* Execute the Lua script */
+    if (luaL_dofile(luaVM, argv[1])) err_message("Problem running script.");
+
+    /* Lua cleanup */
+    lua_close(luaVM);
+
+    return EXIT_SUCCESS;
+}
+{% endhighlight %}
