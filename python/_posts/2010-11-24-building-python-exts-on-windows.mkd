@@ -56,3 +56,6 @@ Cleaning up...
 
 C:\Users\Jon>
 </pre>
+
+**UPDATE:** This is a [known issue](http://bitbucket.org/ianb/pip/issue/191/compiler-build-option-on-windows)
+with pip on Windows so add your support to the fix request.
