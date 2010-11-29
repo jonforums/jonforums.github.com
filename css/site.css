@@ -12,7 +12,7 @@ p { line-height:1.3; }
 #footer { font-family:Arial,sans-serif; font-size:0.7em; color:#c69207; width:900px; margin:30px auto; padding-top:6px; border-top:1px solid #ddd; clear:both;}
 #footer div { width:140px; margin:0 auto; }
 
-.highlight { background-color:#edeac6; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
+.highlight { background-color:#edeac6; overflow:auto; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
 .shell { width:632px; color:#dd0; background-color:#000; margin-bottom:1em; border:4px solid #99a; border-top:16px solid #99a; overflow:auto; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
 
 #posts { width:640px; margin-right:10px; float:left; }
