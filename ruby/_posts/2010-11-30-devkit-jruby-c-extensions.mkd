@@ -1,0 +1,242 @@
+---
+layout: post
+title: JRuby, Windows, and C Extensions
+---
+
+You've found a really useful RubyGem but can't use it on your JRuby Windows
+machine because it's a **native C extension**. And yes, it's only available
+in source. And if you did get it to compile, you'd slam face first into the
+well-known fact that JRuby doesn't work with native RubyGems.
+
+Fahrvergnügen!
+
+"No problem, I'll just port it to Java" says your always-optimistic-but-clueless
+other self. "Great, another one to support" you mutter as reality saunters back
+into view.
+
+Just about to call it quits, you find [this post](http://blog.bithug.org/2010/11/rsoc)
+about some cool Ruby Summer of Code work by Tim Felgentreff. Oddly, you
+stumble upon the [DevKit toolchain](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit)
+ for Windows systems, it falls into place, and everything begins to look a
+little brighter.
+
+But why would anyone do that? Well, one of the [JRuby guys](http://blog.headius.com/2010/07/what-jruby-c-extension-support-means-to.html)
+has a few words on the matter.
+
+Always the <del>sceptic</del> realist, you decide to see how The Pipe Dream
+works out with a few of the well-known native RubyGems from the ether.
+
+Turns out, it's as easy as:
+
+1. Clone JRuby's GitHub repository
+2. Download and install the DevKit
+3. Build JRuby with C extension support
+4. RubyGem install-o-rama!
+5. Smoke test the RubyGems
+
+## Cloning JRuby's Repository
+
+Using your existing [msysgit](http://code.google.com/p/msysgit) installation, type
+
+<pre class="shell">
+C:\>git clone git://github.com/jruby/jruby.git jruby-dev
+Cloning into jruby-dev...
+done.
+
+C:\>
+</pre>
+
+## Installing the DevKit
+
+First, download the [DevKit](http://rubyinstaller.org/downloads) and install it to a
+directory without spaces, say `C:\DevKit`. Next, run the following after you've updated
+the DevKit's `config.yml` file to point to the JRuby repository you just cloned. For
+more detailed instructions check out the [DevKit installation](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit)
+and [DevKit upgrade](https://github.com/oneclick/rubyinstaller/wiki/FAQ#upgrade_dk) wiki pages.
+
+<pre class="shell">
+C:\DevKit>type config.yml
+# ...SNIP...
+#
+---
+- C:/jruby-dev
+
+C:\DevKit>ruby dk.rb install
+[INFO] Installing 'C:/jruby-dev/lib/ruby/site_ruby/1.8/rubygems/defaults/operating_system.rb'
+[INFO] Installing 'C:/jruby-dev/lib/ruby/site_ruby/shared/devkit.rb'
+
+C:\DevKit>
+</pre>
+
+## Building JRuby with C Extension Support
+
+Make sure you've setup your Ant+JDK build environment correctly, bring the
+DevKit's build tools and git onto `PATH`, and build JRuby via
+
+<pre class="shell">
+C:\DevKit>devkitvars
+Adding the DevKit to PATH...
+
+C:\DevKit>cd \jruby-dev
+
+C:\jruby-dev>echo %PATH%
+C:\DevKit\bin;C:\DevKit\mingw\bin;C:\git\cmd;C:\ant\bin;C:\Program Files\Java\jdk1.6.0_22\bin;
+C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem
+
+C:\jruby-dev>ant clean jar cext
+...SNIP...
+cext:
+
+BUILD SUCCESSFUL
+Total time: 2 minutes 5 seconds
+C:\jruby-dev>
+</pre>
+
+## Installing Some RubyGems
+
+Ensure your setup is correct by opening a new shell, adding your newly built
+JRuby to `PATH`, and running a quick smoke test via
+
+<pre class="shell">
+C:\>echo %PATH%
+C:\jruby-dev\bin;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem
+
+C:\>jruby --version
+jruby 1.6.0.dev (ruby 1.8.7 patchlevel 249) (2010-11-30 88ad204) (Java HotSpot(TM)
+Client VM 1.6.0_22) [Windows 7-x86-java]
+
+C:\>jruby -e "puts 'Hello from Ruby-on-%s' % RUBY_PLATFORM.capitalize"
+Hello from Ruby-on-Java
+
+C:\>jruby -S gem env
+RubyGems Environment:
+  - RUBYGEMS VERSION: 1.3.7
+  - RUBY VERSION: 1.8.7 (2010-11-30 patchlevel 249) [java]
+  - INSTALLATION DIRECTORY: C:/jruby-dev/lib/ruby/gems/1.8
+  - RUBY EXECUTABLE: C:/jruby-dev/bin/jruby.exe
+  - EXECUTABLE DIRECTORY: C:/jruby-dev/bin
+  - RUBYGEMS PLATFORMS:
+    - ruby
+    - universal-java-1.6
+  - GEM PATHS:
+     - C:/jruby-dev/lib/ruby/gems/1.8
+     - C:/Users/Jon/.gem/jruby/1.8
+
+  ...SNIP...
+
+C:\>
+</pre>
+
+Now, let's install the `rdiscount` and `curb` gems.
+
+`rdiscount` is simple enough, but to install `curb` you need to have already
+installed `curl`'s header and library development artifacts. As the DevKit is
+based upon MinGW, a great place to get these [development artifacts](http://www.gknw.net/mirror/curl/win32/)
+is from Guenter Knauf who distributes Curl's Windows binaries. Thank him when
+you get a moment.
+
+Although I use `jruby -S gem` you can also use just `gem` if the JRuby bindir
+is the only (or first) Ruby on your `PATH`. Note, the `--platform=ruby` option
+forces RubyGems to attempt to build the native gem rather than trying to install
+a gem specifically built for JRuby. For example, [EventMachine](http://rubyeventmachine.com/)
+has a Java specific gem in addition other platform specific gems and a source gem.
+But that is a topic for a future post.
+
+Moving on...
+
+<pre class="shell">
+C:\>jruby -S gem install rdiscount --platform=ruby
+JRuby limited openssl loaded. http://jruby.org/openssl
+gem install jruby-openssl for full support.
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed rdiscount-1.6.5
+1 gem installed
+
+C:\>jruby -S gem install curb --platform=ruby -- --with-curl-lib="c:/curl/bin" --with-curl-include="c:/curl/include"
+JRuby limited openssl loaded. http://jruby.org/openssl
+gem install jruby-openssl for full support.
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed curb-0.7.8
+1 gem installed
+
+C:\>jruby -S gem list
+
+*** LOCAL GEMS ***
+
+curb (0.7.8)
+rdiscount (1.6.5)
+sources (0.0.1)
+
+C:\>
+</pre>
+
+## Smoke Test the RubyGems
+
+Make sure the directory you used with `--with-curl-lib` containing the `curl` DLL
+is on `PATH`.
+
+<pre class="shell">
+C:\>jruby -rubygems -e "require 'rdiscount'; puts RDiscount.new('**Hello JRuby**').to_html"
+calling init (63288dd6)
+&lt;p&gt;&lt;strong&gt;Hello JRuby&lt;/strong&gt;&lt;/p&gt;
+
+C:\>type curbee.rb
+require 'rubygems'
+require 'curb'
+
+c = Curl::Easy.perform("http://www.google.com")
+puts 'URL: %s' % c.url
+puts 'IP: %s' % c.primary_ip
+puts 'Request Size: %s' % c.request_size
+
+C:\>jruby curbee.rb
+calling init (63fc1560)
+URL: http://www.google.com
+IP: 72.14.204.103
+Request Size: 53
+
+C:\>
+</pre>
+
+Yeh!
+
+## Conclusion
+
+So what does it all mean? Simply put, a wider spectrum of options for you as
+both a developer and user of JRuby on Windows. With that perspective, take
+another read of both [Tim](http://blog.bithug.org/2010/11/rsoc) and
+[Charles](http://blog.headius.com/2010/07/what-jruby-c-extension-support-means-to.html)
+posts.
+
+### Future Post Spoiler
+
+Is it really always this easy? Well, most of the times yes, but sometimes no.
+There are a few caveats, but they're for a future post. For example, why is
+the first "failure" not really a failure?
+
+<pre class="shell">
+C:\>jruby -S gem install eventmachine --platform=ruby --pre
+JRuby limited openssl loaded. http://jruby.org/openssl
+gem install jruby-openssl for full support.
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+ERROR:  Error installing eventmachine:
+        ERROR: Failed to build gem native extension.
+
+...SNIP...
+
+cmain.cpp:752:20: error: 'fstat' was not declared in this scope
+g++.exe: unrecognized option '-EHs'
+g++.exe: unrecognized option '-GR'
+make: *** [cmain.o] Error 1
+
+C:\>jruby -s gem install eventmachine --pre
+JRuby limited openssl loaded. http://jruby.org/openssl
+gem install jruby-openssl for full support.
+Successfully installed eventmachine-1.0.0.beta.2-java
+1 gem installed
+
+C:\>
+</pre>
