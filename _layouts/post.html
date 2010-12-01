@@ -3,8 +3,10 @@ layout: default
 ---
 
 <div id="wrapper">
-	<h1 class="post_title">{{ page.title }}</h1>
-	{{ content }}
-  <div class="post_date">Posted: {{ page.date | date: "%B %d, %Y" }}</div>
-  <a class="home_link" href="/">&#171; Back</a>
+  <div id="single_post">
+	  <h1 class="post_title">{{ page.title }}</h1>
+	  {{ content }}
+    <div class="post_date">Posted: {{ page.date | date: "%B %d, %Y" }}</div>
+    <a class="home_link" href="/">&#171; Back</a>
+  </div>
 </div>
