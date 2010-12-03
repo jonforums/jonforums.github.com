@@ -11,7 +11,7 @@ well-known fact that JRuby doesn't work with native RubyGems.
 Fahrvergnügen!
 
 "No problem, I'll just port it to Java" says your always-optimistic-but-clueless
-other self. "Great, another one to support" you mutter as reality saunters back
+other self. "Great, another one-off to support" you mutter as reality saunters back
 into view.
 
 Just about to call it quits, you find [this post](http://blog.bithug.org/2010/11/rsoc)
@@ -204,10 +204,17 @@ Yeh!
 
 ## Conclusion
 
-So what does it all mean? Simply put, a wider spectrum of options for you as
-both a developer and user of JRuby on Windows. With that perspective, take
-another read of both [Tim](http://blog.bithug.org/2010/11/rsoc) and
-[Charles](http://blog.headius.com/2010/07/what-jruby-c-extension-support-means-to.html)
+So what does it all mean? Simply put, a wider spectrum of code reuse options for
+you as both a developer and user of JRuby on Windows.
+
+One of the more interesting options is the ability to defer, perhaps completely,
+custom development by enabling you to focus your limited resources on the areas
+of your product in which you add real value, thereby getting you to 'go-live'
+faster. For me, JRuby's C extension support is a compelling code reuse and
+aggregation technology that enhances JRuby's existing integration capabilities.
+
+From that perspective, take another read of both [Tim](http://blog.bithug.org/2010/11/rsoc)
+and [Charles](http://blog.headius.com/2010/07/what-jruby-c-extension-support-means-to.html)
 posts.
 
 ### Future Post Spoiler
