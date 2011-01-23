@@ -79,7 +79,7 @@ unless find_library('kernel32', 'LoadLibraryA')
   abort '[ERROR] unable to find kernel32 library.'
 end
 
-create_makefile('oops_null/oops_null')
+create_makefile('oops-null/oops-null')
 
 {% endhighlight %}
 
