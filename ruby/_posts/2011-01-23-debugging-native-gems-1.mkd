@@ -1,0 +1,124 @@
+---
+layout: post
+title: Debugging Native RubyGems - Part 1
+---
+
+As the first in a series on debugging native C RubyGems on Windows using the
+RubyInstaller's [DevKit](http://rubyinstaller.org/add-ons/devkit/), this post
+focuses on a few configuration actions you must take in order to begin the
+actual debugging session using GDB from the DevKit.
+
+First, if you haven't done so already, install Ruby on your Windows system using
+one of the [RubyInstaller](http://rubyinstaller.org/downloads/) downloads.
+
+Second, ensure you've installed the RubyInstaller's [DevKit](http://rubyinstaller.org/downloads/)
+toolchain. If you're installing it for the first time,
+[**read these instructions**](http://github.com/oneclick/rubyinstaller/wiki/Development-Kit).
+No really, read the instructions!
+
+Third, install the [rake-compiler](http://rubyinstaller.org/add-ons/rake-compiler/)
+gem by typing `gem install rake-compiler`.
+
+In future posts we'll be building and debugging (on Windows) a native C RubyGem
+that causes the Ruby interpreter to segfault and crash. Don't worry, the crash
+is isolated to the Ruby interpreter rather than your Windows system.
+
+In general, building native RubyGems on Windows is rather straightforward these
+days once you've properly configured your RubyInstaller + DevKit environment to
+take advantage of the rake-compiler. The key remaining technical hurdle is to
+figure out how to ensure both Ruby **and** your native RubyGem includes the debugging
+symbols required for efficient debugging with GDB.
+
+The first one's easy; all our RubyInstaller downloads are built with debugging
+symbols included.
+
+However, ensuring your native RubyGem gets built with debugging symbols is a bit
+more challenging because, by default, symbols are stripped from the native shared
+library by the following lines in the gem's generated `Makefile`:
+
+{% highlight make linenos %}
+cflags   =  $(optflags) $(debugflags) $(warnflags)
+optflags = -O3
+debugflags = -g
+...
+CFLAGS   =  $(cflags)
+...
+LDSHARED = $(CC) -shared $(if $(filter-out -g -g0,$(debugflags)),,-s)
+...
+$(DLLIB): $(DEFFILE) $(OBJS) Makefile
+	@-$(RM) $(@)
+	$(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
+
+{% endhighlight %}
+
+Is this a bug with MRI Ruby's build configuration? Not at all.
+
+As debugging symbols add size to your shared library, for typical use you want
+the symbols removed. Also, while you normally want more performance rather than
+less, the `-O3` performance optimization can make it harder to debug the root
+cause of many problems.
+
+Since this is Just How MRI Ruby Works, you're stuck right? Not really since you're
+a persistent hacker who rarely takes 'No' for an answer. You puzzle over the above
+`Makefile` snippet for awhile, look at the `mkmf.rb` source code, then decide
+to include the following little hack (lines 3-8) in the gem's `extconf.rb`, the
+file responsible for creating the `Makefile` which builds and installs the native
+RubyGem.
+
+{% highlight ruby linenos %}
+require 'mkmf'
+
+# stop LDSHARED stripping symbols (-s) if debugflags only
+# contains -g and/or -g0
+if ENV['BUILD_DEBUG_LIB']
+  puts '[INFO] enabling debug library build configuration.'
+  CONFIG['debugflags'] << ' -ggdb3 -O0'
+end
+
+unless find_library('kernel32', 'LoadLibraryA')
+  abort '[ERROR] unable to find kernel32 library.'
+end
+
+create_makefile('oops_null/oops_null')
+
+{% endhighlight %}
+
+**NOTE:** another option may be to put a similar hack into the gem's `Rakefile`
+and count on `require`'s behavior of trying to prevent multiple loads of the
+same `rbconfig` file. This could cause other issues, but I've not looked into it.
+
+You can now build and install a debuggable native RubyGem by simply typing:
+
+<pre class="shell">
+C:\Users\Jon\Documents\RubyDev\oops-null-gem>set BUILD_DEBUG_LIB=1
+
+C:\Users\Jon\Documents\RubyDev\oops-null-gem>rake gem
+(in C:/Users/Jon/Documents/RubyDev/oops-null-gem)
+Temporarily enhancing PATH to include DevKit...
+mkdir -p pkg
+WARNING:  no rubyforge_project specified
+  Successfully built RubyGem
+  Name: oops-null
+  Version: 0.1.0
+  File: oops-null-0.1.0.gem
+mv oops-null-0.1.0.gem pkg/oops-null-0.1.0.gem
+
+C:\Users\Jon\Documents\RubyDev\oops-null-gem>gem install pkg\oops-null-0.1.0.gem
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed oops-null-0.1.0
+1 gem installed
+
+</pre>
+
+## Conclusion
+
+While the above hack isn't perfect by any means, adding it to a gem's `extconf.rb`
+currently ensures that the gem's native shared library will contain usable debug
+symbols needed by GDB. While this hack works for your gem's, it doesn't solve the
+problem when you're trying to debug someone else's native C RubyGem.
+
+In the next post, I'll show you one way to begin debugging (on Windows with GDB) a
+native C RubyGem that segfault's the Ruby interpreter. Until then, if you've found
+another clever way to build native RubyGem's with included symbols, I'd like to
+hear from you. Drop me an email!
