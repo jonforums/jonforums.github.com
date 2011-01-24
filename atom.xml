@@ -19,6 +19,7 @@ layout: nil
     <link href="http://jonforums.github.com{{ post.url }}" />
     <id>http://jonforums.github.com{{ post.id }}</id>
     <updated>{{ post.date | date_to_xmlschema }}</updated>
+    <summary>{{ post.content | truncatewords: 20 | strip_html }}</summary>
   </entry>
   {% endfor %}
 </feed>
