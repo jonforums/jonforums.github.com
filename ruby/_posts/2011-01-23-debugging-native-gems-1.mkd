@@ -46,8 +46,8 @@ CFLAGS   =  $(cflags)
 LDSHARED = $(CC) -shared $(if $(filter-out -g -g0,$(debugflags)),,-s)
 ...
 $(DLLIB): $(DEFFILE) $(OBJS) Makefile
-	@-$(RM) $(@)
-	$(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
+    @-$(RM) $(@)
+    $(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
 
 {% endhighlight %}
 
@@ -79,7 +79,7 @@ unless find_library('kernel32', 'LoadLibraryA')
   abort '[ERROR] unable to find kernel32 library.'
 end
 
-create_makefile('oops-null/oops-null')
+create_makefile('oops_null/oops_null')
 
 {% endhighlight %}
 
@@ -90,10 +90,10 @@ same `rbconfig` file. This could cause other issues, but I've not looked into it
 You can now build and install a debuggable native RubyGem by simply typing:
 
 <pre class="shell">
-C:\Users\Jon\Documents\RubyDev\oops-null-gem>set BUILD_DEBUG_LIB=1
+C:\projects\oops-null-git>set BUILD_DEBUG_LIB=1
 
-C:\Users\Jon\Documents\RubyDev\oops-null-gem>rake gem
-(in C:/Users/Jon/Documents/RubyDev/oops-null-gem)
+C:\projects\oops-null-git>rake gem
+(in C:/projects/oops-null-git)
 Temporarily enhancing PATH to include DevKit...
 mkdir -p pkg
 WARNING:  no rubyforge_project specified
@@ -103,7 +103,7 @@ WARNING:  no rubyforge_project specified
   File: oops-null-0.1.0.gem
 mv oops-null-0.1.0.gem pkg/oops-null-0.1.0.gem
 
-C:\Users\Jon\Documents\RubyDev\oops-null-gem>gem install pkg\oops-null-0.1.0.gem
+C:\projects\oops-null-git>gem install pkg\oops-null-0.1.0.gem
 Temporarily enhancing PATH to include DevKit...
 Building native extensions.  This could take a while...
 Successfully installed oops-null-0.1.0
