@@ -26,5 +26,5 @@ p { line-height:1.3; }
 #info { width:244px; font-family:Arial,sans-serif; border-left:1px dotted #ddd; padding: 0 0 0 2px; margin:0 0 0 3px; float:left; clear:right; }
 #info_title { font-size:1.6em; font-weight:bold; color:#ac212b; margin:0 0 6px 3px; text-shadow:1px 1px 3px #bdaf5c; }
 
-.category { color:#fd8a0d; font-weight:bold; margin:0 0 3px 21px; }
+.category a { display:inline-block; color:#fd8a0d; background-color:transparent !important; font-weight:bold; margin:0 0 3px 21px; }
 .cat_posts { display:inline-block; position:relative; color:#999; font-size:0.7em; font-weight:normal; top:-0.2em; }

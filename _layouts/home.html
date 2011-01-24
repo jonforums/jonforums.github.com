@@ -12,7 +12,7 @@ layout: default
     {% endunless %}
 
     {% for c in site.categories %}
-      <div class="category">{{ c[0] | capitalize }} <span class="cat_posts">({{ c[1] | size }})</span></div>
+    <div class="category"><a href="/{{ c[0] }}.html">{{ c[0] | capitalize }}</a> <span class="cat_posts">({{ c[1] | size }})</span></div>
     {% endfor %}
 	</div>	
 </div>
