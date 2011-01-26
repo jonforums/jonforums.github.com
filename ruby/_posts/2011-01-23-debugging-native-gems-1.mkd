@@ -68,20 +68,22 @@ RubyGem.
 {% highlight ruby linenos %}
 require 'mkmf'
 
-# stop LDSHARED stripping symbols (-s) if debugflags only
-# contains -g and/or -g0
+# Stop 1.9.2's LDSHARED from stripping symbols (-s) if debugflags
+# only contains -g and/or -g0 and remove 1.8.7 LDSHARED's hard-coded
+# -s
 if ENV['BUILD_DEBUG_LIB']
   puts '[INFO] enabling debug library build configuration.'
-  CONFIG['debugflags'] << ' -ggdb3 -O0'
-end
-
-unless find_library('kernel32', 'LoadLibraryA')
-  abort '[ERROR] unable to find kernel32 library.'
+  if RUBY_VERSION < '1.9'
+    CONFIG['LDSHARED'] = 'gcc -shared'
+  else
+    CONFIG['debugflags'] << ' -ggdb3 -O0'
+  end
 end
 
 create_makefile('oops_null/oops_null')
 
 {% endhighlight %}
+**1/26/2011** - update hack to work with MRI 1.8.7's build configuration.
 
 **NOTE:** another option may be to put a similar hack into the gem's `Rakefile`
 and count on `require`'s behavior of trying to prevent multiple loads of the
@@ -90,7 +92,6 @@ same `rbconfig` file. This could cause other issues, but I've not looked into it
 You can now build and install a debuggable native RubyGem by simply typing:
 
 <pre class="shell">
-C:\projects\oops-null-git>set BUILD_DEBUG_LIB=1
 
 C:\projects\oops-null-git>rake gem
 (in C:/projects/oops-null-git)
@@ -102,6 +103,8 @@ WARNING:  no rubyforge_project specified
   Version: 0.1.0
   File: oops-null-0.1.0.gem
 mv oops-null-0.1.0.gem pkg/oops-null-0.1.0.gem
+
+C:\projects\oops-null-git>set BUILD_DEBUG_LIB=1
 
 C:\projects\oops-null-git>gem install pkg\oops-null-0.1.0.gem
 Temporarily enhancing PATH to include DevKit...
