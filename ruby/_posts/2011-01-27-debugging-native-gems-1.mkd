@@ -25,7 +25,7 @@ is isolated to the Ruby interpreter rather than your Windows system.
 **UPDATE:** for those wanting to get a jump on Part 2, here's the
 [oops-null source repo](https://github.com/oopsforge/oops-null) for the native
 RubyGem, and the source gem is available from [rubygems.org](http://rubygems.org/gems/oops-null).
-If you want to start using to to debug, first `set BUILD_DEBUG_LIB=1` and
+If you want to start using to debug, first `set BUILD_DEBUG_LIB=1` and
 ensure you've installed the DevKit before you `gem install oops-null`.
 
 In general, building native RubyGems on Windows is rather straightforward these
