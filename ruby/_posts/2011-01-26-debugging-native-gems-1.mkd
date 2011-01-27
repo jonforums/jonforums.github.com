@@ -22,10 +22,15 @@ gem by typing `gem install rake-compiler`.
 In future posts we'll be building and debugging (on Windows) a native C RubyGem
 that causes the Ruby interpreter to segfault and crash. Don't worry, the crash
 is isolated to the Ruby interpreter rather than your Windows system.
+**UPDATE:** for those wanting to get a jump on Part 2, here's the
+[oops-null source repo](https://github.com/oopsforge/oops-null) for the native
+RubyGem, and the source gem is available from [rubygems.org](http://rubygems.org/gems/oops-null).
+If you want to start using to to debug, first `set BUILD_DEBUG_LIB=1` and
+ensure you've installed the DevKit before you `gem install oops-null`.
 
 In general, building native RubyGems on Windows is rather straightforward these
 days once you've properly configured your RubyInstaller + DevKit environment to
-take advantage of the rake-compiler. The key remaining technical hurdle is to
+take advantage of the `rake-compiler`. The key remaining technical hurdle is to
 figure out how to ensure both Ruby **and** your native RubyGem includes the debugging
 symbols required for efficient debugging with GDB.
 
@@ -37,6 +42,8 @@ more challenging because, by default, symbols are stripped from the native share
 library by the following lines in the gem's generated `Makefile`:
 
 {% highlight make linenos %}
+# Ruby 1.9.2 build configuration
+
 cflags   =  $(optflags) $(debugflags) $(warnflags)
 optflags = -O3
 debugflags = -g
@@ -83,7 +90,7 @@ end
 create_makefile('oops_null/oops_null')
 
 {% endhighlight %}
-**1/26/2011** - update hack to work with MRI 1.8.7's build configuration.
+**UPDATE:** refactored hack to work with MRI 1.8.7's build configuration.
 
 **NOTE:** another option may be to put a similar hack into the gem's `Rakefile`
 and count on `require`'s behavior of trying to prevent multiple loads of the
