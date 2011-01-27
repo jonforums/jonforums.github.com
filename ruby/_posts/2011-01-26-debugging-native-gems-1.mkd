@@ -68,13 +68,13 @@ RubyGem.
 {% highlight ruby linenos %}
 require 'mkmf'
 
-# Stop 1.9.2's LDSHARED from stripping symbols (-s) if debugflags
-# only contains -g and/or -g0 and remove 1.8.7 LDSHARED's hard-coded
-# -s
+# override normal build configuration to build debug friendly library
 if ENV['BUILD_DEBUG_LIB']
   puts '[INFO] enabling debug library build configuration.'
   if RUBY_VERSION < '1.9'
-    CONFIG['LDSHARED'] = 'gcc -shared'
+    $CFLAGS = CONFIG['CFLAGS'].gsub(/\s\-O\d?\s/, ' -O0 ')
+    $CFLAGS.gsub!(/\s?\-g\w*\s/, ' -ggdb3 ')
+    CONFIG['LDSHARED'] = CONFIG['LDSHARED'].gsub(/\s\-s(\s|\z)/, ' ')
   else
     CONFIG['debugflags'] << ' -ggdb3 -O0'
   end
