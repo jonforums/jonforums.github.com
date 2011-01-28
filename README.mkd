@@ -1,3 +1,4 @@
 ## TODO
 
-* clickable categories that show just those posts
+* add ability to click main graphic to go to home page
+* consider implementing discus comments
