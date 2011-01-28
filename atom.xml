@@ -18,7 +18,13 @@ layout: nil
     <title>{{ post.title }}</title>
     <link href="http://jonforums.github.com{{ post.url }}" />
     <id>http://jonforums.github.com{{ post.id }}</id>
-    <updated>{{ post.date | date_to_xmlschema }}</updated>
+    <updated>
+      {% if post.updated %}
+        {{ post.updated | date_to_xmlschema }}
+      {% else %}
+        {{ post.date | date_to_xmlschema }}
+      {% endif %}
+    </updated>
     <summary>{{ post.content | truncatewords: 20 | strip_html }}</summary>
     <category term="{{ post.categories[0] }}" label="{{ post.categories[0] }}" />
   </entry>
