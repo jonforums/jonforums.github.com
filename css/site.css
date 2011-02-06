@@ -1,7 +1,7 @@
 body { font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif; font-size:100%; margin:0; padding:0; border:0; }
 
 a:link, a:visited { text-decoration:none; color:#000; background-color:#fffcba; padding:0 2px; border-radius:4px; -moz-border-radius:4px; -webkit-border-radius:4px; }
-a:hover { text-decoration:underline; color:#6a1a13; }
+a:hover { text-decoration:none; color:#6a1a13; }
 a.home_link { display:inline-block; position:relative; left:-1em; margin-top:18px; color:#770000 !important; font-weight:bold !important; background-color:transparent !important; }
 a.home_link:hover { text-decoration:underline; }
 
