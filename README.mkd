@@ -1,4 +1,5 @@
 ## TODO
 
+* create custom grid style layout via `grid-layout`
 * add ability to click main graphic to go to home page
-* consider implementing discus comments
+* consider implementing disqus comments
