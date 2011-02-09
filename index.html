@@ -3,8 +3,10 @@ layout: home
 title: .:. Uprising .:.
 ---
 
-<div id="posts">
-  {% for p in site.posts %}
+{% for p in site.posts %}
+  <div class="first grid1">&nbsp;</div>
+
+  <div class="grid17">
     <div class="post">
       <a class="post_title_link" href="{{ p.url }}">{{ p.title }}</a>
       {{ p.content }}
@@ -14,5 +16,5 @@ title: .:. Uprising .:.
         {% endif %}
       </div>
     </div>
-  {% endfor %}
-</div>
+  </div>
+{% endfor %}

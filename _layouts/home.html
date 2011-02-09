@@ -3,16 +3,18 @@ layout: default
 ---
 <div id="logo"></div>
 
-<div id="wrapper">
-	{{ content }}
+<div class="container">
+  <div class="first grid18">
+  {{ content }}
+  </div>
 
-  <div id="info">
+  <div class="grid6 info">
     {% unless site.categories == empty %}
       <div id="info_title">Categories</div>
     {% endunless %}
 
     {% for c in site.categories %}
-    <div class="category"><a href="/{{ c[0] }}.html">{{ c[0] | capitalize }}</a> <span class="cat_posts">({{ c[1] | size }})</span></div>
+    <div class="category"><a href="/{{ c[0] }}.html">{{ c[0] | capitalize }}</a> <span>({{ c[1] | size }})</span></div>
     {% endfor %}
 	</div>	
 </div>
