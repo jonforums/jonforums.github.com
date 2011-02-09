@@ -1,28 +1,28 @@
 ---
 layout: post
-title: Remi LeRante's &#x201c;Time for msysgit&#x201d;
+title: Remi LeRante's &#x201c;Time for msysGit&#x201d;
 updated: 2011-02-06T17:58:37-05:00
 ---
 
-I use [msysgit](http://code.google.com/p/msysgit/) every day -- without issue -- on
+I use [msysGit](http://code.google.com/p/msysgit/) every day -- without issue -- on
 my Win7 system. I also use [git](http://www.archlinux.org/packages/extra/i686/git/)
 every day on my Arch Linux system.
 
-And I'm not the only guy developing on Windows that finds msysgit to be great.
+And I'm not the only guy developing on Windows that finds msysGit to be great.
 By now you're saying &#x201c;So what's your point Remi!?&#x201d; The point is that threads
 [like this one](http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-core/34123)
 have gone well past boring into absolutely annoying.
 
 Why?
 
-Simple. The msysgit downloads **still** have *preview* in their filenames eventhough
+Simple. The msysGit downloads **still** have *preview* in their filenames eventhough
 the code has worked solidly for quite awhile. I can understand why the project's
 contributors might want to be humble and let the code quality speak for itself. But
 it's quite another thing to hamstring the code by labeling it *preview*.
 
-It's time for this nonsense to come to an end and for msysgit to hold it's head up
+It's time for this nonsense to come to an end and for msysGit to hold it's head up
 high and walk proud.
 
-If you agree, drop over to the [msysgit mailing list](http://groups.google.com/group/msysgit)
+If you agree, drop over to the [msysGit mailing list](http://groups.google.com/group/msysgit)
 and tell them what a great job they're doing!  And, oh by the way, please drop the
 *preview* label from your downloads :)
