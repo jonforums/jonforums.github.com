@@ -4,7 +4,7 @@ h2 {font-size:123.1%;}
 h3 {font-size:108%;}
 h1,h2,h3 {margin:1em 0;font-weight:bold;text-shadow:1px 1px 3px #bdaf5c;}
 p {font-size:100%;margin-bottom:1em;padding:0;line-height:1.4;}
-code {font-family:'Bitstream Vera Sans Mono','DejaVu Sans Mono','Consolas','Monaco',monospace;font-size:0.9em;}
+code {font-family:'Consolas','Bitstream Vera Sans Mono','DejaVu Sans Mono','Monaco',monospace;font-size:0.9em;}
 
 a:link,a:visited {text-decoration:none;color:#000;background-color:#fffcba;padding:0 2px;border-radius:4px;-moz-border-radius:4px;-webkit-border-radius:4px;}
 a:hover {text-decoration:none;color:#6a1a13;background-color:#fffdc6;}
@@ -22,7 +22,7 @@ a.home_link:hover {text-decoration:underline;}
 #logo {width:900px;height:273px;margin:1px auto 10px auto;background:#fff url(/images/phx_rising_logo.jpg);}
 
 .highlight {font-size:0.8em;background-color:#edeac6;overflow:auto;border-radius:4px;-moz-border-radius:4px;-webkit-border-radius:4px;}
-.shell {font-size:0.8em;width:640px;color:#dd0;background-color:#000;margin:0 auto 1em auto;border:4px solid #99a;border-top:16px solid #99a;overflow:auto;border-radius:4px;-moz-border-radius:4px;-webkit-border-radius:4px;}
+.shell {font-family:'Consolas','Monaco',monospace;font-size:0.8em;width:640px;color:#dd0;background-color:#000;margin:0 auto 1em auto;border:4px solid #99a;border-top:16px solid #99a;overflow:auto;border-radius:4px;-moz-border-radius:4px;-webkit-border-radius:4px;}
 
 #single_post {width:800px;margin:0 auto;}
 .post {margin-bottom:1em;}
