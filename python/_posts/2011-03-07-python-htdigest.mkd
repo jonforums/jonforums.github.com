@@ -1,0 +1,60 @@
+---
+layout: post
+title: A Python htdigest Generator
+---
+
+I've recently been testing [CherryPy 3.2.0](http://cherrypy.org/wiki/WhatsNewIn32) and
+looking into their new tool-based support for [Digest Authentication](http://en.wikipedia.org/wiki/Digest_authentication).
+But I didn't have a simple way to generate the correctly formatted lines for CherryPy's
+built-in `get_ha1_file_htdigest` function that expects an Apache-styled `htdigest`-like
+credentials store file.
+
+Until now.
+
+{% highlight python linenos %}
+# file: htdigest.py
+import sys
+from hashlib import md5
+
+def main(opts):
+    ht5 = lambda x: md5(':'.join(x)).hexdigest()
+    htpwd = ':'.join((opts['user'],
+                     opts['realm'],
+                     ht5((opts['user'], opts['realm'], opts['pass']))))
+    print htpwd
+
+
+if __name__ == '__main__':
+    usage = '''
+usage: python htdigest.py --user USER --pass PASSWORD [--realm REALM]
+'''
+    opts = dict()
+    for o in ['--user', '--pass', '--realm']:
+        try:
+            opts[o.replace('--','')] = sys.argv[sys.argv.index(o)+1]
+        except ValueError:
+            pass
+        except IndexError:
+            pass
+    opts['realm'] = opts.get('realm', 'default_realm')
+
+    if not opts.has_key('user') or not opts.has_key('pass'):
+        print("[ERROR] must supply both a username and password")
+        print(usage)
+        exit(1)
+
+    main(opts)
+{% endhighlight %}
+
+which generates results like:
+
+<pre class="shell">
+C:\tools>python htdigest.py --user remi --pass lerante
+remi:default_realm:7076fd3cc727f3c4770ff0bb5905b9d8
+
+C:\tools>
+</pre>
+
+While the helper script simply outputs to `stdout`, you can use your shell
+redirectors `>` and `>>` to create a new, or append to an existing,
+`htdigest`-like credentials store file.
