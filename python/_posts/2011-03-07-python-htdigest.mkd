@@ -1,6 +1,7 @@
 ---
 layout: post
 title: A Python htdigest Generator
+updated: 2011-03-09T11:10:27-05:00
 ---
 
 I've recently been testing [CherryPy 3.2.0](http://cherrypy.org/wiki/WhatsNewIn32) and
@@ -16,29 +17,33 @@ Until now.
 import sys
 from hashlib import md5
 
+class Options(object):
+    pass
+
 def main(opts):
     ht5 = lambda x: md5(':'.join(x)).hexdigest()
-    htpwd = ':'.join((opts['user'],
-                     opts['realm'],
-                     ht5((opts['user'], opts['realm'], opts['pass']))))
+    htpwd = ':'.join((opts.user, opts.realm,
+                     ht5((opts.user, opts.realm, opts.pwd))))
     print htpwd
 
 
 if __name__ == '__main__':
+
     usage = '''
-usage: python htdigest.py --user USER --pass PASSWORD [--realm REALM]
+usage: python htdigest.py --user USER --pwd PASSWORD [--realm REALM]
 '''
-    opts = dict()
-    for o in ['--user', '--pass', '--realm']:
+
+    opts = Options()
+    for o in ['--user', '--pwd', '--realm']:
         try:
-            opts[o.replace('--','')] = sys.argv[sys.argv.index(o)+1]
+            setattr(opts, o.replace('--',''), sys.argv[sys.argv.index(o)+1])
         except ValueError:
             pass
         except IndexError:
             pass
-    opts['realm'] = opts.get('realm', 'default_realm')
+    opts.realm = getattr(opts, 'realm', 'default_realm')
 
-    if not opts.has_key('user') or not opts.has_key('pass'):
+    if not hasattr(opts, 'user') or not hasattr(opts, 'pwd'):
         print("[ERROR] must supply both a username and password")
         print(usage)
         exit(1)
@@ -49,7 +54,7 @@ usage: python htdigest.py --user USER --pass PASSWORD [--realm REALM]
 which generates results like:
 
 <pre class="shell">
-C:\tools>python htdigest.py --user remi --pass lerante
+C:\tools>python htdigest.py --user remi --pwd lerante
 remi:default_realm:7076fd3cc727f3c4770ff0bb5905b9d8
 
 C:\tools>
