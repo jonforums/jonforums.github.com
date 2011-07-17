@@ -1,0 +1,271 @@
+---
+layout: post
+title: Building Rubinius on Windows - Part 1
+---
+
+I've been meaning to figure out how to build Rubinius on Windows 7 for awhile,
+but something always seemed to get in the way. You know the story, little things
+like paying work, business trips, a good jam session, other projects, whatever.
+
+I finally took some time and have made progress solving the puzzle. Thankfully,
+the Rubinius team has been busy hacking on the core as well as their build
+environment. There's still a lot to do to make the build environment more
+usable for Windows Ruby hackers, but I was pleased with how relatively simple
+it was to progress as far as I did.
+
+While I haven't been able to build Rubinius yet, this post is a snapshot of
+where I'm at and what I've had to do to get there. In summary:
+
+1. Install a 1.9 version of the [RubyInstaller](http://rubyinstaller.org/downloads/).
+2. Build a MinGW-w64 version of the [DevKit](http://rubyinstaller.org/add-ons/devkit/).
+3. Remove the name prefixing from the MinGW-w64 DevKit artifacts.
+4. Prepare your system for building.
+5. Build via `ruby configure` and `rake`.
+
+The instructions that follow assume you've already installed and configured a
+Git client such as [MSysGit](http://msysgit.googlecode.com/).
+
+## Install the RubyInstaller
+
+If you haven't already done so, install a 1.9 version of the [RubyInstaller](http://rubyinstaller.org/downloads/),
+add it's `bin` directory to your `PATH` environment variable, and make sure
+you've got the Rake gem installed by typing `rake --version`. If Rake isn't
+present, ensure you're connected to the Internet and type `gem install rake`.
+
+The RubyInstaller is easy to install regardless of whether you use the installer
+or the 7-Zip archive. If you installed it and tried typing `ruby --version`
+in a Command Prompt with no results, drop by our [Google Group](http://groups.google.com/group/rubyinstaller)
+and ask for help.
+
+## Build a Custom MinGW-w64 Based DevKit
+
+One of the features I've built into the RubyInstaller build recipes is the ability
+to easily create different "flavors" of MinGW-based build toolchains. We're going
+to take advantage of that feature and build a 32bit, MinGW-w64 based flavor and
+use it to build Rubinius. To build it, simply do the following:
+
+<pre class="shell">
+# clone the RubyInstaller GitHub repository
+C:\>git clone git://github.com/oneclick/rubyinstaller.git
+  ...
+
+# build your custom DevKit
+C:\>cd rubyinstaller
+C:\rubyinstaller>rake devkit 7z=1 dkver=mingw64-32-4.5.4
+  ...
+
+# find your MinGW-w64 DevKit in C:\rubyinstaller\pkg
+
+</pre>
+
+Unfortunately, you've got one more tweak to make before the MinGW-w64 DevKit
+is usable for building Rubinius. You've got to remove the prefixing from the
+toolchain executable names.
+
+Until the MinGW-w64 standard downloads are available in non-cross-compiling
+versions, or I update the DevKit build recipes (on my TODO), you'll need to
+manually strip the name prefixing from the relevant executables in your
+`<DEVKIT_INSTALL_DIR>\mingw\bin` directory. Here's a Ruby script and example
+to help you out.
+
+{% highlight ruby linenos %}
+
+def usage_and_exit(code)
+  STDERR.puts 'usage: ruby deprefix.rb ROOT_DIR PREFIX'
+  exit(code)
+end
+
+usage_and_exit(-1) unless ARGV.length == 2
+
+dir = ARGV[0].gsub('\\', File::SEPARATOR)
+prefix = ARGV[1]
+
+usage_and_exit(-2) unless File.directory?(dir)
+
+Dir.glob(File.join(dir, "#{prefix}-*.exe")).each do |f|
+  d = File.dirname(f)
+  b = File.basename(f)
+  puts "renaming #{f} => #{d}/#{b.split(/-/)[3]}"
+  File.rename(f, "#{d}/#{b.split(/-/)[3]}")
+end
+
+{% endhighlight %}
+
+Copy the above script as `deprefix.rb` into the root directory of wherever
+you installed your MinGW-w64 DevKit (`C:\DevKit-w64` for this post) and
+run the script like so.
+
+<pre class="shell">
+C:\DevKit-w64>ruby deprefix.rb mingw\bin i686-w64-mingw32
+renaming mingw/bin/i686-w64-mingw32-addr2line.exe => mingw/bin/addr2line.exe
+renaming mingw/bin/i686-w64-mingw32-ar.exe => mingw/bin/ar.exe
+renaming mingw/bin/i686-w64-mingw32-as.exe => mingw/bin/as.exe
+renaming mingw/bin/i686-w64-mingw32-c++.exe => mingw/bin/c++.exe
+...
+renaming mingw/bin/i686-w64-mingw32-windres.exe => mingw/bin/windres.exe
+
+C:\DevKit-w64>
+
+</pre>
+
+## Prepare for Building
+
+Next, you need to clone the Rubinius source repository, create a new branch based
+off of the `2.0.0pre` branch, tweak the `configure` script, and add the MinGW-w64
+based DevKit to your `PATH` env var like so. I don't show how to merge the (currently
+trivial) commits from [my experimental branch](https://github.com/jonforums/rubinius/compare/2.0.0pre...v2-configure-win)
+and assume you already know how to do this.
+
+<pre class="shell">
+
+# clone Rubinius and create a branch for hacking
+C:\projects>git clone git://github.com/rubinius/rubinius.git
+  ...
+
+C:\projects>cd rubinius
+C:\projects\rubinius>git checkout -b win-build origin/2.0.0pre
+  ...
+
+# merge commits from my experimental Rubinius branch or manually hack
+  ...
+
+# add the MinGW-w64 DevKit tools to your PATH
+C:\projects\rubinius>\DevKit-w64\devkitvars.bat
+Adding the DevKit to PATH...
+
+C:\projects\rubinius>
+
+</pre>
+
+## Build
+
+You're now set up and ready to pull the trigger, so get building!
+
+<pre class="shell">
+C:\projects\rubinius>ruby --version
+ruby 1.9.2p290 (2011-07-09 revision 32478) [i386-mingw32]
+
+C:\projects\rubinius>ruby configure --with-vendor-zlib --with-ruby-readline --without-execinfo
+  ...
+
+# see how Rubinius configured itself
+C:\projects\rubinius>ruby configure --show
+
+Using the following configuration to build
+------------------------------------------
+module Rubinius
+  BUILD_CONFIG = {
+    :which_ruby     => :ruby,
+    :build_ruby     => "C:/ruby192/bin/ruby.exe",
+    :build_rake     => "rake",
+    :build_perl     => "perl",
+    :llvm           => :prebuilt,
+    ...
+    :vendor_zlib    => false,
+  }
+end
+
+Setting the following defines for the VM
+----------------------------------------
+#define RBX_HOST          "i686-pc-mingw32"
+#define RBX_CPU           "i686"
+#define RBX_VENDOR        "pc"
+#define RBX_OS            "mingw32"
+...
+#define RBX_ZLIB_PATH     ""
+#define RBX_DEFAULT_18    true
+#define RBX_DEFAULT_19    false
+#define RBX_DEFAULT_20    false
+#define RBX_ENABLED_18    1
+#define RBX_LITTLE_ENDIAN 1
+#define RBX_HAVE_TR1_HASH 1
+#define RBX_WINDOWS 1
+
+# time to build! make a cup of green tea while you wait...
+C:\projects\rubinius>rake
+  ...
+
+</pre>
+
+After successfully building for quite awhile you should see the build fail with
+an error similar to the following. This failure appears to be caused by the fact
+that the zlib library hasn't been built. This isn't surprising given that
+`ruby configure --show` displayed `:vendor_zlib => false` and `#define RBX_ZLIB_PATH ""`.
+So I've either misconfigured Rubinius, or there's a bug in `configure`.
+
+<pre class="shell">
+
+...
+2: CC vm/vmmethod.cpp
+Build time: 461.15241 seconds
+1: LD vm/vm.exe
+C:/ruby192/bin/ruby.exe -S rake  -r C:/projects/rubinius/config.rb
+-r C:/projects/rubinius/rakelib/ext_helper.rb
+-r C:/projects/rubinius/rakelib/dependency_grapher.rb build:build
+Building bootstrap Melbourne for MRI
+CXX bstrlib.c
+CXX encoding_compat.cpp
+CXX grammar18.cpp
+CXX grammar19.cpp
+CXX melbourne.cpp
+CXX node_types18.cpp
+CXX node_types19.cpp
+CXX quark.cpp
+CXX symbols.cpp
+CXX var_table18.cpp
+CXX var_table19.cpp
+CXX visitor18.cpp
+CXX visitor19.cpp
+LDSHARED build/melbourne20.so
+GEN runtime/platform.conf
+rake aborted!
+Compilation error generating constants rbx.platform.zlib:
+        In file included from C:/projects/rubinius/rbx-ffi-generators-rbx-platform-zlib.c:2:0:
+        vendor/zlib/zlib.h:34:19: fatal error: zconf.h: No such file or directory
+        compilation terminated.
+
+Tasks: TOP => default => build => build:build => kernel:build => runtime/platform.conf
+(See full trace by running task with --trace)
+
+</pre>
+
+## A Few Warts
+
+While it's really too early for me to discuss the Rubinius build environment
+warts, a few uglies do jump out.
+
+1. The build dependencies are not managed consistently nor in a way that's
+   friendly to building on Windows. On *nix-based systems it's normal to
+   require users to have already installed required headers and libraries
+   into the standard directory locations expected by the build toolkit.
+   On Windows this strategy is almost always fundamentally flawed, especially
+   when trying to build with a MinGW-based toolchain. A better strategy is
+   to download and build the dependent libraries _before_ configuring and
+   building your main application. The `zlib`, `curses`, and `rb-readline`
+   libraries appear to suffer from this issue.
+2. There appears to be no automated way to clean up the build environment
+   as `rake distclean` doesn't do what you expect it to do. I had to
+   go into each `vendor/` sub-directory and manually run either `make distclean`,
+   `rm *.o`, or `make clean` depending upon the library. And `rake extensions:clean`
+   didn't do what I expected. Once again, this is likely my inexperience with
+   Rubinius, but there needs to be a way to bring the source tree back to a
+   pristine state so as not to get misleading build failures due to stale
+   build artifacts.
+
+## Conclusion
+
+While I've made a lot of progress in building Rubinius on Windows 7, unfortunately
+I'm not yet able to successfully and repeatedly build the Rubinius project. This
+likely has more to do with my current unfamiliarity with Rubinius than anything
+else.
+
+That said, while it's too early for me to discuss in detail potential build
+environment flaws, and implement/suggest Windows-friendly fixes, I've identified
+a couple warts that I believe need to be quickly addressed.
+
+In future posts I plan to summarize what I needed to do to successfully build
+Rubinius on Windows 7. Meanwhile, if you spot anything that I'm doing wrong or
+have any suggestions, I'd like to hear from you via email or Twitter.
+
+And I'm sure Brian Ford and others on the Rubinius team would also like to hear
+about your progress.
