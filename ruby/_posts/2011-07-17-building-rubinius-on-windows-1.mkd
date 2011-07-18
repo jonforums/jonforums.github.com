@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Building Rubinius on Windows - Part 1
+updated: 2011-07-18T09:15:23-05:00
 ---
 
 I've been meaning to figure out how to build Rubinius on Windows 7 for awhile,
@@ -70,6 +71,7 @@ to help you out.
 
 {% highlight ruby linenos %}
 
+# file: deprefix.rb
 def usage_and_exit(code)
   STDERR.puts 'usage: ruby deprefix.rb ROOT_DIR PREFIX'
   exit(code)
@@ -241,8 +243,10 @@ warts, a few uglies do jump out.
    On Windows this strategy is almost always fundamentally flawed, especially
    when trying to build with a MinGW-based toolchain. A better strategy is
    to download and build the dependent libraries _before_ configuring and
-   building your main application. The `zlib`, `curses`, and `rb-readline`
-   libraries appear to suffer from this issue.
+   building your main application. Better yet, prebuild required libraries
+   and download the binaries before configuring. The `zlib`, `curses`, and
+   `rb-readline` libraries appear to suffer from this issue. **TODO** look
+   into leveraging [MiniPortile](https://github.com/luislavena/mini_portile).
 2. There appears to be no automated way to clean up the build environment
    as `rake distclean` doesn't do what you expect it to do. I had to
    go into each `vendor/` sub-directory and manually run either `make distclean`,
