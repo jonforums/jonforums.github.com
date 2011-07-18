@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Profiling MinGW Apps - Part 1
+updated: 2011-07-18T10:04:13-05:00
 ---
 
 If you've tried to profile Windows apps built with a MinGW toolkit you've likely
@@ -157,7 +158,7 @@ the pace and dig into something a bit more challenging.
 
 {% highlight ruby linenos %}
 
-# file: aqtime_build.rb
+# file: override/aqtime_build.rb
 # custom build config overrides
 if ENV['AQTIME'] then
   puts '[INFO] Overriding to enable AQtime profiled Ruby 1.9.x...'
