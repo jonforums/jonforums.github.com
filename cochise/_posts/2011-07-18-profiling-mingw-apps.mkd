@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Profiling MinGW Apps - Part 1
-updated: 2011-07-18T10:04:13-05:00
+updated: 2011-07-18T10:13:15-05:00
 ---
 
 If you've tried to profile Windows apps built with a MinGW toolkit you've likely
@@ -17,7 +17,7 @@ this means that assembly and/or raw memory addresses appear in the output rather
 source code and functions names. Not the easiest way to determine what's happening
 in your code.
 
-Other profilers such `gprof` can be so finicky that it's next to impossible to
+Other profilers such as `gprof` can be so finicky that it's next to impossible to
 find the right combination of compile options required for your application to
 build. Most frustrating, if you do finally discover the incantation needed build,
 you're often confronted with runtime failures such as `The procedure entry point
