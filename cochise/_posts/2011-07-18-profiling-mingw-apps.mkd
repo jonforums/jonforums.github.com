@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Profiling MinGW Apps - Part 1
-updated: 2011-07-18T10:13:15-05:00
+updated: 2011-07-18T10:18:25-05:00
 ---
 
 If you've tried to profile Windows apps built with a MinGW toolkit you've likely
@@ -19,7 +19,7 @@ in your code.
 
 Other profilers such as `gprof` can be so finicky that it's next to impossible to
 find the right combination of compile options required for your application to
-build. Most frustrating, if you do finally discover the incantation needed build,
+build. Most frustrating, if you do finally discover the incantation needed to build,
 you're often confronted with runtime failures such as `The procedure entry point
 mcount could not be located...` It's maddening if it turns out that `gprof` just
 doesn't play nicely with your app.
@@ -135,7 +135,7 @@ looks like the following.
 
 While it's almost impossible to read the results, the highlighted line near the
 middle of the graphic shows that the `rb_mongo_stat` routine took up the most
-time with `2.27` seconds followed by the `hello` routine taking `0.47` seconds.
+time with `2.27` seconds followed by the `hello` routine taking `0.45` seconds.
 Selecting each routine name changes the information displayed in the source code
 view on the right and the different views (Disassembler, Parent/Child Details,
 Call Graph, and Call Tree) at the bottom.
