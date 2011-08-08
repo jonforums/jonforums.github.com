@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Building Rubinius on Windows - Part 1
-updated: 2011-07-18T09:15:23-05:00
+updated: 2011-08-08T15:51:13-05:00
 ---
 
 I've been meaning to figure out how to build Rubinius on Windows 7 for awhile,
@@ -113,10 +113,8 @@ C:\DevKit-w64>
 ## Prepare for Building
 
 Next, you need to clone the Rubinius source repository, create a new branch based
-off of the `2.0.0pre` branch, tweak the `configure` script, and add the MinGW-w64
-based DevKit to your `PATH` env var like so. I don't show how to merge the (currently
-trivial) commits from [my experimental branch](https://github.com/jonforums/rubinius/compare/2.0.0pre...v2-configure-win)
-and assume you already know how to do this.
+off of the `2.0.0pre` branch, and add the MinGW-w64 based DevKit to your `PATH`
+env var like so.
 
 <pre class="shell">
 
@@ -126,9 +124,6 @@ C:\projects>git clone git://github.com/rubinius/rubinius.git
 
 C:\projects>cd rubinius
 C:\projects\rubinius>git checkout -b win-build origin/2.0.0pre
-  ...
-
-# merge commits from my experimental Rubinius branch or manually hack
   ...
 
 # add the MinGW-w64 DevKit tools to your PATH
@@ -147,7 +142,7 @@ You're now set up and ready to pull the trigger, so get building!
 C:\projects\rubinius>ruby --version
 ruby 1.9.2p290 (2011-07-09 revision 32478) [i386-mingw32]
 
-C:\projects\rubinius>ruby configure --with-vendor-zlib --with-ruby-readline --without-execinfo
+C:\projects\rubinius>ruby configure --with-vendor-zlib
   ...
 
 # see how Rubinius configured itself
@@ -193,7 +188,9 @@ After successfully building for quite awhile you should see the build fail with
 an error similar to the following. This failure appears to be caused by the fact
 that the zlib library hasn't been built. This isn't surprising given that
 `ruby configure --show` displayed `:vendor_zlib => false` and `#define RBX_ZLIB_PATH ""`.
-So I've either misconfigured Rubinius, or there's a bug in `configure`.
+**UPDATE:** there appears to be a bug in `configure` and I've submitted a simple
+[pull request](https://github.com/rubinius/rubinius/pull/1108) to fix the issue
+of the `zlib` library not being built.
 
 <pre class="shell">
 
@@ -231,30 +228,18 @@ Tasks: TOP => default => build => build:build => kernel:build => runtime/platfor
 
 </pre>
 
-## A Few Warts
+## A Wart
 
 While it's really too early for me to discuss the Rubinius build environment
-warts, a few uglies do jump out.
+warts, one ugly does jump out.
 
-1. The build dependencies are not managed consistently nor in a way that's
-   friendly to building on Windows. On *nix-based systems it's normal to
-   require users to have already installed required headers and libraries
-   into the standard directory locations expected by the build toolkit.
-   On Windows this strategy is almost always fundamentally flawed, especially
-   when trying to build with a MinGW-based toolchain. A better strategy is
-   to download and build the dependent libraries _before_ configuring and
-   building your main application. Better yet, prebuild required libraries
-   and download the binaries before configuring. The `zlib`, `curses`, and
-   `rb-readline` libraries appear to suffer from this issue. **TODO** look
-   into leveraging [MiniPortile](https://github.com/luislavena/mini_portile).
-2. There appears to be no automated way to clean up the build environment
+1. There appears to be no automated way to clean up the build environment
    as `rake distclean` doesn't do what you expect it to do. I had to
-   go into each `vendor/` sub-directory and manually run either `make distclean`,
-   `rm *.o`, or `make clean` depending upon the library. And `rake extensions:clean`
-   didn't do what I expected. Once again, this is likely my inexperience with
-   Rubinius, but there needs to be a way to bring the source tree back to a
-   pristine state so as not to get misleading build failures due to stale
-   build artifacts.
+   go into each `vendor/` sub-directory and manually run either `make distclean`
+   or `make clean` depending upon the library. The `rake distclean` should
+   bring the the source tree back to a pristine state by cleaning the `vendor/`
+   subdirectories, while the `rake clean` target should correctly skip cleaning
+   those subdirectories.
 
 ## Conclusion
 
@@ -262,10 +247,6 @@ While I've made a lot of progress in building Rubinius on Windows 7, unfortunate
 I'm not yet able to successfully and repeatedly build the Rubinius project. This
 likely has more to do with my current unfamiliarity with Rubinius than anything
 else.
-
-That said, while it's too early for me to discuss in detail potential build
-environment flaws, and implement/suggest Windows-friendly fixes, I've identified
-a couple warts that I believe need to be quickly addressed.
 
 In future posts I plan to summarize what I needed to do to successfully build
 Rubinius on Windows 7. Meanwhile, if you spot anything that I'm doing wrong or
