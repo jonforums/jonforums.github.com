@@ -1,0 +1,25 @@
+---
+layout: post
+title: Fenix Rises on Windows
+---
+
+Sometimes you discover people doing great work. And doing it with passion,
+skill, and a commitment to excellence. Fenix is a little nugget of software
+gold worthy of your attention, and worthy of your time to test and help refine.
+
+The following snippet **is not** exactly what it does, but if you get the
+idea, do yourself a favor and run over to the [Fenix source repo](https://github.com/luislavena/fenix),
+clone it and start playing.
+
+<pre class="shell">
+C:\Users\Jon\Documents>ripl
+>> class File
+ |   def self.expand_path(path, base='.')
+ |     puts "Make mine faster with Win32 please."
+ |   end
+ | end
+=> nil
+>> File.expand_path '../my/cool/ruby/thing'
+Make mine faster with Win32 please.
+
+</pre>
