@@ -1,0 +1,224 @@
+---
+layout: post
+title: Hacking a RubyGem
+---
+
+Sometimes you need to quickly hack a RubyGem to do your bidding. You already know
+it's a terrible idea. You already know you should buck up and submit a patch to the
+gem's maintainer. But you just can't stop yourself from tweaking. Habits die hard.
+
+The `psych` gem bundles up all the YAML goodness already available by default in
+the MRI Ruby 1.9 series. But, currently, installing the `psych` gem on Windows
+isn't as nice as it could be. Psych assumes you've already installed the [libyaml](http://pyyaml.org/wiki/LibYAML)
+development headers and libraries on your system, and it assumes you've made
+`yaml.dll` available on your `%PATH%` for runtime use.
+
+As a Windows user, what you'd really like to do is `gem install psych` and have
+everything just work. But if installation was already that easy, there would be
+no point in this post would there?
+
+So let's give `psych` a smarter brain that groks easier Windows installs.
+However, the real point is to show how easy it is to crack open an existing
+RubyGem and modify it to suit your needs. If you're a natural salesperson you'll
+try to sell this as "code reuse" rather than the lurking maintenance fiasco it
+really is.
+
+Ready Dr. Frakenstein?
+
+## Get the Development Goodies
+
+If you haven't done so already, download a [DevKit](http://rubyinstaller.org/downloads)
+MSYS/MinGW toolchain and inject its goodness into your Ruby by following
+[these instructions](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit).
+If you'd like to use GCC v4.6.2 I've added a build recipe to the RubyInstaller project.
+Simpy run `rake devkit dkver=mingw-32-4.6.2 sfx=1` and look in the `pkg` subdirectory.
+
+Next, you need the `libyaml` development headers and libraries. They're really easy
+to build from source using my [libyaml-waf](https://github.com/jonforums/libyaml-waf)
+build recipe or you can download a pre-built binary from [my GitHub repo](https://github.com/jonforums/libyaml-waf/downloads).
+Extract the contents to `c:\devlibs\libyaml`.
+
+## Open up the RubyGem
+
+Now, fetch the `psych` gem, extract its `gemspec`, and unpack everything into a
+work directory in preparation for modifying `psych`'s internals.
+
+<pre class="shell">
+C:\Users\Jon\Downloads\temp>gem fetch psych
+Fetching: psych-1.2.2.gem (100%)
+Downloaded psych-1.2.2
+
+C:\Users\Jon\Downloads\temp>gem spec psych-1.2.2.gem --ruby > psych.gemspec
+
+C:\Users\Jon\Downloads\temp>gem unpack psych-1.2.2.gem
+Unpacked gem: 'C:/Users/Jon/Downloads/temp/psych-1.2.2'
+
+C:\Users\Jon\Downloads\temp>move psych.gemspec psych-1.2.2
+        1 file(s) moved.
+
+C:\Users\Jon\Downloads\temp>cd psych-1.2.2
+
+</pre>
+
+## Hack the Internals
+
+Now it's time to make `psych` smarter by tweaking how it's built. The idea is
+to update its `extconf.rb` to allow static linking to `libyaml` and update its
+version and build date information to minimize potential conflicts with the
+official `psych` releases.
+
+First, patch the existing `ext\psych\extconf.rb` with:
+
+{% highlight diff linenos %}
+diff --git a/ext/psych/extconf.rb b/ext/psych/extconf.rb
+index fe7795f..772471a 100644
+--- a/ext/psych/extconf.rb
++++ b/ext/psych/extconf.rb
+@@ -17,6 +17,13 @@ end
+ asplode('yaml.h')  unless find_header  'yaml.h'
+ asplode('libyaml') unless find_library 'yaml', 'yaml_get_version'
+ 
++# --enable-static option statically links libyaml to psych
++# XXX only for *nix or MinGW build toolchains
++if ARGV.include?('--enable-static')
++  $libs.gsub!('-lyaml', '-Wl,-static -lyaml -Wl,-shared')
++  $defs.push('-DYAML_DECLARE_STATIC')
++end
++
+ create_makefile 'psych'
+ 
+ # :startdoc:
+{% endhighlight %}
+
+Next, update the version and date information in both `psych.gemspec` and
+`lib\psych.rb`.
+
+{% highlight ruby %}
+# file: psych.gemspec
+Gem::Specification.new do |s|
+  s.name = "psych"
+  s.version = "1.2.3.alpha.1"
+  ...
+  s.authors = ["Aaron Patterson"]
+  s.date = "2012-02-24"
+  ...
+end
+
+# file: lib\psych.rb
+module Psych
+  # The version is Psych you're using
+  VERSION         = '1.2.3.alpha.1'
+  ...
+end
+{% endhighlight %}
+
+## Build and Install
+
+If all went well, we should be able to build our own little Fraken-psych and
+watch it successfully install. The key is to use `--with-libyaml-dir` and the new
+`--enable-static` options when you invoke `gem install`.
+
+Let's flip the switch and see see what happens.
+
+<pre class="shell">
+C:\Users\Jon\Downloads\temp\psych-1.2.2>gem build psych.gemspec
+  Successfully built RubyGem
+  Name: psych
+  Version: 1.2.3.alpha.1
+  File: psych-1.2.3.alpha.1.gem
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2>gem install psych-1.2.3.alpha.1.gem -- --with-libyaml-dir=c:\devlibs\libyaml --enable-static
+Temporarily enhancing PATH to include DevKit...
+Building native extensions.  This could take a while...
+Successfully installed psych-1.2.3.alpha.1
+1 gem installed
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2>gem list psych
+
+*** LOCAL GEMS ***
+
+psych (1.2.3.alpha.1)
+
+</pre>
+
+## It's Alive!
+
+Time for a quicktest to see how it works. I use `ripl` but there's no reason
+you can't use good old `irb`. Note the use of `gem psych` before `require psych`
+in order to use our updated version of `psych`.
+
+<pre class="shell">
+C:\Users\Jon\Downloads\temp\psych-1.2.2>ripl
+>> gem 'psych'
+=> true
+>> require 'psych'
+=> true
+>> [ Psych::LIBYAML_VERSION, Psych::VERSION ]
+=> ["0.1.4", "1.2.3.alpha.1"]
+>> Psych.load "- this\n- is\n- an array\n- of strings"
+=> ["this", "is", "an array", "of strings"]
+
+</pre>
+
+That look's pretty good. But given that Aaron has spent time creating a large test
+suite, it would be a shame to quit at the quicktest. We're going to return to
+the work directory, build, copy the resulting `psych.so` to `lib\psych`, and run
+the official `psych` test suite. This example assumes the DevKit is installed in
+`C:\DevKit`.
+
+<pre class="shell">
+C:\Users\Jon\Downloads\temp\psych-1.2.2>cd ext\psych
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2\ext\psych>\DevKit\devkitvars.bat
+Adding the DevKit to PATH...
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2\ext\psych>ruby extconf.rb --with-libyaml-dir=c:\devlibs\libyaml --enable-static
+extconf.rb:7: Use RbConfig instead of obsolete and deprecated Config.
+checking for yaml.h... yes
+checking for yaml_get_version() in -lyaml... yes
+creating Makefile
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2\ext\psych>make
+generating psych-i386-mingw32.def
+compiling emitter.c
+compiling parser.c
+compiling psych.c
+compiling to_ruby.c
+compiling yaml_tree.c
+linking shared-object psych.so
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2\ext\psych>xcopy psych.so ..\..\lib
+C:psych.so
+1 File(s) copied
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2\ext\psych>cd ..\..
+
+C:\Users\Jon\Downloads\temp\psych-1.2.2>for %F in (test\psych\test_*.rb) do ruby -Ilib -Itest %F
+...
+C:\Users\Jon\Downloads\temp\psych-1.2.2>ruby -Ilib -Itest test\psych\test_yamldbm.rb
+...
+
+.....F............
+
+Finished tests in 0.811202s, 22.1893 tests/s, 57.9387 assertions/s.
+
+  1) Failure:
+test_key(Psych::YAMLDBMTest) [test/psych/test_yamldbm.rb:80]:
+<"a"> expected but was
+<nil>.
+
+18 tests, 47 assertions, 1 failures, 0 errors, 0 skips
+
+</pre>
+
+Not perfect, but not bad. Only one of the official tests failed. Time to submit
+an issue to `psych`'s GitHub issue tracker.
+
+## Conclusion
+
+As you can see, it's straightforward to modify an existing RubyGem if need be.
+But while it may be easy to do, I don't recommend it for anything but experimentation.
+Take your hard work and wrap it up into a patch for the maintainers. You've got
+better things to do with your time than maintain a one-off fork and gem
+maintainers typically love contributions, especially those that fix problems
+or enhance usability.
