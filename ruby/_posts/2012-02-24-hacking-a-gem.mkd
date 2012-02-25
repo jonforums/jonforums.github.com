@@ -90,6 +90,9 @@ index fe7795f..772471a 100644
  # :startdoc:
 {% endhighlight %}
 
+**UPDATE:** _@luislavena_ pointed out that this will also static link libruby
+to `psych.so`, which is _not_ what we want. Ah, a blog post bug to be fixed.
+
 Next, update the version and date information in both `psych.gemspec` and
 `lib\psych.rb`.
 
