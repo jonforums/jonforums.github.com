@@ -1,0 +1,212 @@
+---
+layout: post
+title: CMake prototype for mruby
+---
+
+With some help from **@beoran** and **@bovi**, I've turned [a question](https://github.com/mruby/mruby/issues/81)
+about mruby build automation into a [prototype](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake)
+that's just about ready to submit for review for inclusion into mruby. While a
+fair bit of work remains, the prototype is good enough that I'm pushing it out
+of the nest for further testing. I've used the prototype to successfully build
+mruby on the following 32bit systems:
+
+* Windows 7 with MSYS/MinGW GCC 4.6.2
+* Windows 7 with Clang 3.1 + MSYS/MinGW GCC 4.6.2
+* Windows 7 with MSYS/MinGW GCC 4.7.1
+* Arch Linux 3.3.5 with GCC 4.7.0 20120505
+* Ubuntu 12.04 with GCC 4.6.3
+
+And **@bovi** has successfully built mruby with CMake on OS X Lion using an earlier
+version of the prototype.
+
+This post isn't a tutorial on CMake or how to embed mruby into another application,
+but rather, a jumpstart to get you up and running with a minimum amount of fuss.
+
+## Get Ready
+
+There's only four requirements (OK, five if you count `git`) for building mruby using
+the CMake prototype:
+
+1. A working `bison` installation
+2. A GCC-based development toolchain
+3. A working [CMake 2.8.8+](http://cmake.org/cmake/resources/software.html) installation, and
+4. A local clone of [my cmake mruby branch](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake).
+
+For Windows hackers, the quickest way to get (1) and (2) is to download a
+self-extracting 32bit MSYS/MinGW 4.6.2 DevKit [from TheCodeShop's Ruby downloads page](https://github.com/thecodeshop/ruby/wiki/Downloads).
+It's built from my RubyInstaller recipes and can be used standalone or integrated
+into one of your existing Rubies by following [these instructions](https://github.com/oneclick/rubyinstaller/wiki/Development-Kit).
+If you're feeling edgy you can build your own DevKit by cloning the
+[RubyInstaller repo](https://github.com/oneclick/rubyinstaller/) and running my
+DevKit build recipe similar to `rake devkit dkver=mingw64-32-4.7.1 sfx=1` from
+the root directory. Look in the `pkg` subdirectory for your freshly baked DevKit.
+Type `rake devkit:ls` to list the available DevKit flavors.
+
+For Unix-like and OS X hackers, life is much simpler as it's likely you have both (1)
+and (2) already installed on your system. If not, it's usually just a matter of
+eloquently conversing with your package manager. Something similar to `sudo pacman -S gcc`
+or `sudo apt-get gcc`. Sorry, I don't use OS X or speak MacPorts/Homebrew/Fink yet ;)
+
+To install CMake 2.8.8+, Windows users should [download](http://cmake.org/cmake/resources/software.html)
+and install a prebuilt binary. I extracted the `cmake-2.8.8-win32-x86.zip` archive
+into `C:\Apps\cmake` and created a `cmakevars.bat` helper to bring `C:\Apps\cmake\bin`
+onto my `PATH` rather than using the CMake installer. Unix-like users can speak nicely
+to their package manager, install the `cmake-2.8.8-Linux-i386.tar.gz` binary archive,
+or build CMake from source.
+
+Finally, you need to add a local copy of my `jonforums-mods/cmake` branch to your
+mruby clone by doing something similar to the following. All examples will be shown
+on a Windows 7 system, but the steps and Unix commands are similar.
+
+<pre class="shell">
+C:\Users\Jon\Documents\RubyDev>git clone https://github.com/mruby/mruby.git mruby-git
+...
+C:\Users\Jon\Documents\RubyDev>cd mruby-git
+
+C:\Users\Jon\Documents\RubyDev\mruby-git>git remote add -f tcs https://github.com/thecodeshop/mruby.git
+
+</pre>
+
+Next, smoke test the setup and make sure you're ready to build.
+
+<pre class="shell">
+# create a local branch of the CMake prototype
+C:\Users\Jon\Documents\RubyDev\mruby-git>git checkout -b cmake tcs/jonforums-mods/cmake
+
+# ALWAYS build outside the source tree!...we'll use the default `build` subdir
+C:\Users\Jon\Documents\RubyDev\mruby-git>cd build
+
+# make the GCC toolchain and bison available for use
+C:\Users\Jon\Documents\RubyDev\mruby-git\build>\DevKit\devkitvars.bat
+Adding the DevKit to PATH...
+
+# ensure cmake is working
+C:\Users\Jon\Documents\RubyDev\mruby-git\build>cmake --version
+cmake version 2.8.8
+
+</pre>
+
+Looks great. Time to see how CMake helps us build mruby.
+
+## Let's Go!
+
+In this example, I'm overcomplicating things a bit by showing you how to instruct
+CMake to customize your build configuration by overriding CMake's `CMAKE_C_COMPILER`
+to use the clang compiler.
+
+**DO NOT** use the sample command line as-is. On Windows systems use `cmake -G "MSYS Makefiles ..`
+to build with the DevKit's GCC. On Unix-like systems use `cmake ..` to build with the
+system GCC.
+
+<pre class="shell">
+C:\Users\Jon\Documents\RubyDev\mruby-git\build>cmake -G "MSYS Makefiles" -DCMAKE_C_COMPILER=C:/clang/bin/clang.exe ..
+-- The C compiler identification is Clang 3.1.0
+-- Check for working C compiler: C:/clang/bin/clang.exe
+-- Check for working C compiler: C:/clang/bin/clang.exe -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Build type not set, defaulting to 'RelWithDebInfo'
+-- Found BISON: C:/DevKit/bin/bison.exe (found version "2.4.2")
+-- Configuring done
+-- Generating done
+-- Build files have been written to: C:/Users/Jon/Documents/RubyDev/mruby-git/build
+
+C:\Users\Jon\Documents\RubyDev\mruby-git\build>make
+[  1%] [BISON][mruby] Building parser with bison 2.4.2
+Scanning dependencies of target mruby_object
+...
+</pre>
+
+You should end up seeing colorful build messages scroll across your shell
+similar to the following:
+
+![CMake mruby build](/images/cmake_mruby.png "CMake mruby build")
+
+## Locally Install and Smoke Test
+
+By default, CMake creates Makefiles that install the necessary mruby
+artifacts into your local mruby repo directory structure. Specifically, it
+installs the `mrbc` and `mruby` executables into `bin`, the static library
+`libmruby.a` into `lib`, and headers into `include`.
+
+Nice, but how about we just install and smoke test `mruby.exe` by making it spit
+out a verbose `hello mruby`!?
+
+<pre class="shell">
+C:\Users\Jon\Documents\RubyDev\mruby-git\build>make install
+[ 87%] Built target mruby_object
+[ 88%] Built target xpcat
+[ 88%] Built target mruby_static
+[ 90%] Built target mrbc
+[ 98%] Built target mrblib_object
+[ 98%] Built target libmruby_static
+[100%] Built target mruby
+Install the project...
+-- Install configuration: "RelWithDebInfo"
+-- Installing: C:/Users/Jon/Documents/RubyDev/mruby-git/lib/mruby.lib
+-- Installing: C:/Users/Jon/Documents/RubyDev/mruby-git/bin/mrbc.exe
+-- Installing: C:/Users/Jon/Documents/RubyDev/mruby-git/bin/mruby.exe
+
+C:\Users\Jon\Documents\RubyDev\mruby-git\build>..\bin\mruby.exe -v -e "puts 'hello mruby!'"
+ruby 1.8.7 (2010-08-16 patchlevel 302) [i386-mingw32]
+NODE_SCOPE:
+  local variables:
+  NODE_BEGIN:
+    NODE_CALL:
+      NODE_SELF
+      method='puts' (308)
+      args:
+        NODE_STR "hello mruby!" len 12
+irep 115 nregs=4 nlocals=2 pools=1 syms=1
+000 OP_LOADSELF R2
+001 OP_STRING   R3      'hello mruby!'
+002 OP_LOADNIL  R4
+003 OP_SEND     R2      'puts'  1
+004 OP_STOP
+
+hello mruby!
+
+</pre>
+
+The default install behavior can be modified when invoking `cmake` similar to
+`cmake -G "MSYS Makefiles" -D CMAKE_INSTALL_PREFIX=C:/Devlibs/mruby ..` or at
+install time similar to `make install DESTDIR=C:/mruby`.
+
+Because you built outside of the source tree in the `build` subdirectory, cleanup
+is as easy as deleting the `build` dir contents (except `.gitkeep`) via a
+`rm -rf *`.
+
+## Things Left TODO
+
+* Finish basic cross compiling support to allow building for Windows from
+  Linux or OS X.
+* Implement CMake and mruby source changes to allow building with the Windows
+  SDK command line tools and Makefiles generated for `nmake`.
+* Implement CMake support for building with MSVC IDE.
+* Refine and optimize the compiler and linker flags.
+* Add option for more informative debug builds when built with GCC, i.e. `-ggdb`
+* Add system introspection support for `config.h` while respecting cross
+  compiling realities.
+* Add shared library build support in addition to the current static library
+  build support.
+* Add CMake support for building mruby usable on at least one mobile or other
+  embedded-like system.
+* Build and embedded runtime testing results on a variety of 64bit OS X, Linux,
+  and Windows systems.
+
+## Conclusion
+
+The CMake prototype, while not perfect, is solid enough to handle more testing
+in different build and runtime scenarios. Take it out for a spin and see how it
+works for you. If you discover problems, [submit an issue](https://github.com/thecodeshop/mruby/issues).
+If you've got the time and interest, dive in and help fix one of the open issues
+that irritates you the most.
+
+My goal is to refine the prototype just enough so that it reliably creates native
+builds on 32/64bit Windows (nmake, not MSVC IDE), Linux, and OS X systems. Once
+the prototype appears robust, I will bundle up the commits and submit a pull
+request for Matz to review.
+
+If Matz agrees that a cross platform CMake build system adds value to mruby, further
+refinements and enhancements should happen as part of the official mruby repository
+rather than [The CodeShop](http://thecodeshop.github.com/about).
