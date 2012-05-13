@@ -1,0 +1,237 @@
+---
+layout: post
+title: Cross compiling mruby
+---
+
+In my [last post](http://jonforums.github.com/ruby/2012/05/09/cmake-prototype-for-mruby.html) I
+showed you how to get started with mruby by using my
+[CMake prototype](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake)
+to build mruby on a variety of [different](https://github.com/thecodeshop/mruby/wiki/CMake-compatible)
+Windows and Unix-like platforms. In this post I'm going to give you a whirlwind
+tour on how to build an mruby on Ubuntu 12.04 that runs on Windows systems.
+
+Don't worry, it won't hurt. Cross compiling is a fairly painless process these
+days thanks to the amazing work of a number of pioneering hackers. Assuming
+your system is setup from my [last post](http://jonforums.github.com/ruby/2012/05/09/cmake-prototype-for-mruby.html),
+you're just a few steps away from cross compiling mruby for Windows:
+
+1. Install a pre-built cross compiling toolchain
+2. Update to my [latest CMake prototype](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake)
+3. Hope that I hid the nasty build complexities behind a simple interface
+
+## A Quick Review
+
+Before diving into cross compiling, let's quickly review how to natively build
+mruby on either a Windows, Linux, or OS X system. Once you've fetched my CMake/mruby
+[prototype branch](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake),
+change to a build directory (_hint_: use the cleverly named `build` subdir) and
+type a command similar to one of the following to configure and build:
+
+* **Unix-like:** `cmake ..` then `make`
+* **Windows with MSYS/MinGW:** `cmake -G "MSYS Makefiles" ..` then `make`
+* **Windows with MinGW:** `cmake -G "MinGW Makefiles" ..` then `mingw32-make`
+* **Windows with MSVC+NMake:** `cmake -G "NMake Makefiles" ..` then `nmake`
+
+CMake lets you do interesting things during the configuration stage such as
+telling it where to install mruby. CMake command line variables modify the
+configuration phase and are used similar to
+`cmake -G "MSYS Makefiles" -D CMAKE_INSTALL_PREFIX=C:/Devlibs/mruby ..`
+
+CMake relies on the concept of "generators" that take a set of abstract build
+instructions, and create platform specific build and project files. Type
+`cmake --help` to see the other generators supported on your platform, selectable
+via the `-G` option. For example, on Windows, CMake supports `Visual Studio 10 Win64`,
+`CodeBlocks - MinGW Makefiles`, and others.
+
+Finally, the generated Makefiles support other useful targets like `make install`,
+`make package`, and `make clean`. Type `make help` to see the full list of targets.
+
+Moving on...
+
+## Get a Cross Compiling Toolchain
+
+Most of the popular Linux distributions have a number of different cross compiler
+toolchains sitting in their package repositories ready for you to painlessly
+install. For this post, as we're only interested in cross toolchains targeting
+Windows systems, I'll use one of the MinGW toolchains installed via something similar
+to `sudo pacman -S mingw32-gcc` or `sudo apt-get install mingw-w64 g++-mingw-w64`.
+
+I don't currently use OS X, but I understand that none of the popular Mac package
+repositories contain recent MinGW toolchains. Don't fret, the guys over at the
+[mingw-w64 project](http://sourceforge.net/projects/mingw-w64/files/) provide Mac
+toolchains targeting 32 or 64bit Windows systems. Simply download, extract, and
+tweak your `PATH`.
+
+## Cross Compiling mruby
+
+In the abstract, cross compiling is about bridging two different worlds by creating
+a small foundry in one world that builds things for use in the other world. Simple, eh?
+
+Once you've properly installed the cross toolchain, the key challenge is to persuade
+your build environment to use the toolchain. The classic `autotools` infrastructure
+has sent a chill up the spine of many a hearty developer with it's `--build`,
+`--host`, and `--target` system triplet options. But we're using CMake, not
+`autotools`.
+
+We simply have to tell CMake to use a "toolchain file" to drive its configuration
+and Makefile generation. As a convenience, I've included [toolchain sample](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake/cmake)
+files for cross compiling mruby for Windows from Arch Linux, Ubuntu, and OS X.
+
+I'm building with Ubuntu, so I copied the [Ubuntu toolchain sample](https://github.com/thecodeshop/mruby/blob/jonforums-mods/cmake/cmake/Toolchain-Ubuntu-mingw32.cmake.sample)
+to my home directory like so. You may need to tweak the settings to match your system and
+the specific cross toolchain you installed.
+
+<pre class="shell">
+jon@ubusvr:~/cdev/mruby-git$ cp cmake/Toolchain-Ubuntu-mingw32.cmake.sample ~/crossdev/Toolchain-Ubuntu-mingw32.cmake
+
+jon@ubusvr:~/cdev/mruby-git$ cat ~/crossdev/Toolchain-Ubuntu-mingw32.cmake
+# Sample toolchain file for building for Windows from an Ubuntu Linux system.
+#
+# Typical usage:
+#    1) install cross compiler: `sudo apt-get install mingw-w64 g++-mingw-w64`
+#    2) cp cmake/Toolchain-Ubuntu-mingw32.cmake.sample ~/Toolchain-Ubuntu-mingw32.cmake
+#    3) tweak toolchain values as needed
+#    4) cd build
+#    5) cmake -DCMAKE_TOOLCHAIN_FILE=~/Toolchain-Ubuntu-mingw32.cmake ..
+
+# name of the target OS on which the built artifacts will run
+# and the toolchain prefix
+set(CMAKE_SYSTEM_NAME Windows)
+set(TOOLCHAIN_PREFIX i686-w64-mingw32)
+
+# cross compilers to use for C and C++
+set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-gcc)
+set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-g++)
+set(CMAKE_RC_COMPILER ${TOOLCHAIN_PREFIX}-windres)
+
+# target environment on the build host system
+#   set 1st to dir with the cross compiler's C/C++ headers/libs
+#   set 2nd to dir containing personal cross development headers/libs
+set(CMAKE_FIND_ROOT_PATH /usr/${TOOLCHAIN_PREFIX} ~/crossdev/w32)
+
+# modify default behavior of FIND_XXX() commands to
+# search for headers/libs in the target environment and
+# search for programs in the build host environment
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+jon@ubusvr:~/cdev/mruby-git$
+
+</pre>
+
+This sample assumes you've installed the mingw-w64 cross toolchain from the
+Ubuntu APT repositories. If you do need to tweak the toolchain file, in most
+cases you'll only need to modify the `TOOLCHAIN_PREFIX` variable and the
+`CMAKE_FIND_ROOT_PATH` variable.
+
+Using the foundry analogy again, the `TOOLCHAIN_PREFIX` ensures you're using
+the right machines, and the `CMAKE_FIND_ROOT_PATH` tells CMake where to get
+the correct materials. In this case, the "materials" are the cross C/C++
+headers/libraries and any other required 3rd party cross header/libraries.
+Currently, cross compiling mruby requires only the cross C/C++ headers and
+libraries provided by the installed cross toolchain.
+
+Once you've got the proper toolchain file, you're ready to configure and build.
+Simply invoke `cmake -D CMAKE_TOOLCHAIN_FILE=...` then `make` similar to
+how you natively built mruby. The only difference from a native compile and a
+cross compile is that for cross compiles you invoke `cmake` with the
+`CMAKE_TOOLCHAIN_FILE` variable referring to the relevant toolchain file.
+
+<pre class="shell">
+jon@ubusvr:~/cdev/mruby-git$ cd build && cmake -D CMAKE_TOOLCHAIN_FILE=~/crossdev/Toolchain-Ubuntu-mingw32.cmake ..
+-- The C compiler identification is GNU 4.6.3
+-- Check for working C compiler: /usr/bin/i686-w64-mingw32-gcc
+-- Check for working C compiler: /usr/bin/i686-w64-mingw32-gcc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Build type not set, defaulting to 'RelWithDebInfo'
+-- Looking for string.h
+-- Looking for string.h - found
+-- Looking for float.h
+-- Looking for float.h - found
+-- Looking for gettimeofday
+-- Looking for gettimeofday - found
+-- Found BISON: /usr/bin/bison (found version "2.5")
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/jon/cdev/mruby-git/build
+
+# cross compile for Windows and package into *.tar.gz and *.zip
+jon@ubusvr:~/cdev/mruby-git/build$ make package
+[  1%] [BISON][mruby] Building parser with bison 2.5
+Scanning dependencies of target mruby_object
+[  3%] Building C object src/CMakeFiles/mruby_object.dir/version.c.obj
+...
+Scanning dependencies of target mruby-native
+[ 78%] Creating directories for 'mruby-native'
+[ 80%] No download step for 'mruby-native'
+[ 81%] No patch step for 'mruby-native'
+[ 83%] No update step for 'mruby-native'
+[ 85%] Performing configure step for 'mruby-native'
+-- The C compiler identification is GNU 4.6.3
+-- Check for working C compiler: /usr/bin/gcc
+-- Check for working C compiler: /usr/bin/gcc -- works
+...
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/jon/cdev/mruby-git/build/native
+[ 86%] Performing build step for 'mruby-native'
+[  1%] [BISON][mruby] Building parser with bison 2.5
+Scanning dependencies of target mruby_object
+[  3%] Building C object src/CMakeFiles/mruby_object.dir/version.c.o
+...
+[ 90%] Completed 'mruby-native'
+[ 90%] Built target mruby-native
+...
+[ 98%] Built target mruby
+Scanning dependencies of target mirb
+[100%] Building C object tools/mirb/CMakeFiles/mirb.dir/mirb.c.obj
+Linking C executable mirb.exe
+[100%] Built target mirb
+Run CPack packaging tool...
+CPack: Create package using TGZ
+CPack: Install projects
+CPack: - Run preinstall target for: mruby
+CPack: - Install project: mruby
+CPack: Create package
+CPack: - package: /home/jon/cdev/mruby-git/build/mruby-1.0.0dev-windows-mingw463.tar.gz generated.
+CPack: Create package using ZIP
+CPack: Install projects
+CPack: - Run preinstall target for: mruby
+CPack: - Install project: mruby
+CPack: Create package
+CPack: - package: /home/jon/cdev/mruby-git/build/mruby-1.0.0dev-windows-mingw463.zip generated.
+
+</pre>
+
+As you can see, I ended up with `mruby-1.0.0dev-windows-mingw463.tar.gz` and
+`mruby-1.0.0dev-windows-mingw463.zip` binary archives in my `build` subdir ready
+to run on a Windows system.
+
+A simple `file` double check shows that the native and cross executables were
+built correctly.
+
+<pre class="shell">
+jon@ubusvr:~/cdev/mruby-git/build$ file tools/mruby/mruby.exe
+tools/mruby/mruby.exe: PE32 executable (console) Intel 80386, for MS Windows
+
+jon@ubusvr:~/cdev/mruby-git/build$ file native/tools/mruby/mruby
+native/tools/mruby/mruby: ELF 32-bit LSB executable, Intel 80386,
+  version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.24,
+  BuildID[sha1]=0x7a42420e0f6fc21727ffedb2e5f35194d97136ba, not stripped
+
+</pre>
+
+## Conclusion
+
+While the CMake prototype now appears to support both native and cross compiled
+mruby builds, it needs much more testing, especially in OS X and 64bit environments.
+
+Kudos-in-advance to anyone getting it to cross compile for ARM from Ubuntu!
+
+Try it out on systems you feel are important. If you discover problems or have
+suggestions for enhancements, [submit an issue](https://github.com/thecodeshop/mruby/issues).
+If it works for you, [let us know](https://github.com/thecodeshop/mruby/wiki/CMake-compatible).
+Finally, if you're interested in moving this effort forward, jump in and fix
+one of the open issues; help is _always_ appreciated.
