@@ -1,12 +1,17 @@
 ---
 layout: post
 title: Cross compiling mruby
+updated: 2012-05-23T18:45:27-06:00
 ---
 
-In my [last post](http://jonforums.github.com/ruby/2012/05/09/cmake-prototype-for-mruby.html) I
-showed you how to get started with mruby by using my
-[CMake prototype](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake)
-to build mruby on a variety of [different](https://github.com/thecodeshop/mruby/wiki/CMake-compatible)
+**Update:** _my CMake prototype mentioned in this post has been accepted into
+the mainstream [mruby codebase](https://github.com/mruby/mruby/pull/182). You no
+longer need to use my prototype branch; original instructions have been
+modified appropriately_.
+
+In my [last post](http://jonforums.github.com/ruby/2012/05/09/cmake-prototype-for-mruby.html)
+I showed you how to get started with mruby by using my CMake prototype
+to build mruby on a variety of [different](https://github.com/mruby/mruby/wiki/CMake-Compatible)
 Windows and Unix-like platforms. In this post I'm going to give you a whirlwind
 tour on how to build an mruby on Ubuntu 12.04 that runs on Windows systems.
 
@@ -16,21 +21,22 @@ your system is setup from my [last post](http://jonforums.github.com/ruby/2012/0
 you're just a few steps away from cross compiling mruby for Windows:
 
 1. Install a pre-built cross compiling toolchain
-2. Update to my [latest CMake prototype](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake)
+2. Update your local clone of the [mruby repo](https://github.com/mruby/mruby/)
 3. Hope that I hid the nasty build complexities behind a simple interface
 
 ## A Quick Review
 
 Before diving into cross compiling, let's quickly review how to natively build
-mruby on either a Windows, Linux, or OS X system. Once you've fetched my CMake/mruby
-[prototype branch](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake),
-change to a build directory (_hint_: use the cleverly named `build` subdir) and
-type a command similar to one of the following to configure and build:
+mruby on either a Windows, Linux, or OS X system. Once you've fetched updates
+from the [mruby repo](https://github.com/mruby/mruby/), change to a build
+directory different from mruby's root dir (_hint_: use the cleverly named `build`
+subdir) and type a command similar to one of the following to configure and build:
 
 * **Unix-like:** `cmake ..` then `make`
 * **Windows with MSYS/MinGW:** `cmake -G "MSYS Makefiles" ..` then `make`
 * **Windows with MinGW:** `cmake -G "MinGW Makefiles" ..` then `mingw32-make`
 * **Windows with MSVC+NMake:** `cmake -G "NMake Makefiles" ..` then `nmake`
+* **Windows with Visual Studio 10:** `cmake -G "Visual Studio 10" ..`
 
 CMake lets you do interesting things during the configuration stage such as
 telling it where to install mruby. CMake command line variables modify the
@@ -44,7 +50,8 @@ via the `-G` option. For example, on Windows, CMake supports `Visual Studio 10 W
 `CodeBlocks - MinGW Makefiles`, and others.
 
 Finally, the generated Makefiles support other useful targets like `make install`,
-`make package`, and `make clean`. Type `make help` to see the full list of targets.
+`make package`, `make test`, and `make clean`. Type `make help` to see the full
+list of targets.
 
 Moving on...
 
@@ -71,13 +78,13 @@ Once you've properly installed the cross toolchain, the key challenge is to pers
 your build environment to use the toolchain. The classic `autotools` infrastructure
 has sent a chill up the spine of many a hearty developer with it's `--build`,
 `--host`, and `--target` system triplet options. But we're using CMake, not
-`autotools`.
+`autotools`, so no worries.
 
 We simply have to tell CMake to use a "toolchain file" to drive its configuration
-and Makefile generation. As a convenience, I've included [toolchain sample](https://github.com/thecodeshop/mruby/tree/jonforums-mods/cmake/cmake)
+and Makefile generation. As a convenience, I've included [toolchain sample](https://github.com/mruby/mruby/tree/master/cmake)
 files for cross compiling mruby for Windows from Arch Linux, Ubuntu, and OS X.
 
-I'm building with Ubuntu, so I copied the [Ubuntu toolchain sample](https://github.com/thecodeshop/mruby/blob/jonforums-mods/cmake/cmake/Toolchain-Ubuntu-mingw32.cmake.sample)
+I'm building with Ubuntu, so I copied the [Ubuntu toolchain sample](https://github.com/mruby/mruby/blob/master/cmake/Toolchain-Ubuntu-mingw32.cmake.sample)
 to my home directory like so. You may need to tweak the settings to match your system and
 the specific cross toolchain you installed.
 
@@ -231,7 +238,7 @@ mruby builds, it needs much more testing, especially in OS X and 64bit environme
 Kudos-in-advance to anyone getting it to cross compile for ARM from Ubuntu!
 
 Try it out on systems you feel are important. If you discover problems or have
-suggestions for enhancements, [submit an issue](https://github.com/thecodeshop/mruby/issues).
-If it works for you, [let us know](https://github.com/thecodeshop/mruby/wiki/CMake-compatible).
+suggestions for enhancements, [submit an issue](https://github.com/mruby/mruby/issues).
+If it works for you, [let us know](https://github.com/mruby/mruby/wiki/CMake-Compatible).
 Finally, if you're interested in moving this effort forward, jump in and fix
 one of the open issues; help is _always_ appreciated.
