@@ -1,0 +1,145 @@
+---
+layout: post
+title: The DevKit Loves libxml2
+---
+
+After an 18 month slumber, [libxml2](http://xmlsoft.org) snapped awake, downed
+a few Irish coffee's, and recently pushed out a
+[2.8.0 release](https://mail.gnome.org/archives/xml/2012-May/msg00061.html).
+
+I just read your mind.
+
+_"I wish Jon would write a **short** post on how to build libxml2 from source
+on Windows using the DevKit."_
+
+Bored stiff with your real work I see. Remember, work? The thing you
+do to fund your debaucheries and sundry bad habits?
+
+But who am I to stand in the way of a bit of slacky hacking. Thankfully, there's
+just three trivial steps thanks to the work of the libxml2 contributors:
+
+1. Build or download a DevKit.
+2. Download the [libxml source via FTP](ftp://xmlsoft.org/libxml2/).
+3. Build and test.
+
+## Get an Edgy DevKit and libxml2-2.8.0
+
+For the fiendishly edgy, clone the [RubyInstaller repo](https://github.com/oneclick/rubyinstaller)
+and build a mingw-w64, gcc 4.7.1 DevKit with `rake devkit sfx=1 dkver=mingw64-32-4.7.1`.
+Run `rake devkit:ls` if you want a list of available DevKit's to build.
+
+For the mildly edgy, download a mingw, gcc 4.6.2 DevKit from
+[TheCodeShop downloads page](https://github.com/thecodeshop/ruby/wiki/Downloads).
+
+Next, download the [libxml2 2.8.0 source tarball](ftp://xmlsoft.org/libxml2/libxml2-2.8.0.tar.gz)
+and extract it to a location that contains no spaces in the pathname. `C:\temp\libxml2-2.8.0`
+looks just fine.
+
+## Build and Test
+
+Although 2.8.0 added lzma compression support, I've gone the way of the Luddite
+and slavishly stuck with just zlib support.
+
+If you don't already have the zlib dev headers/libraries, you can always build
+libxml2 without zlib support by passing the `./configure` script `--without-zlib`
+instead of `--with-zlib=c:/path/to/zlib/devstuff`. Or if you really want zlib
+support, scan this [RubyInstaller ML post](http://groups.google.com/group/rubyinstaller/browse_thread/thread/65ee6e1db249f7e)
+and see what interesting URLs you discover.
+
+I'll swing back and update the post once I've toyed with the new lzma capability.
+
+<pre class="shell">
+c:\temp\libxml2-2.8.0>\DevKit-4.7.1\devkitvars.bat
+Adding the DevKit to PATH...
+
+# formatted for post...use a single command line when building
+C:\temp\libxml2-2.8.0>sh -c "./configure --prefix=c:/devlibs/libxml2-2.8.0 \
+                            --with-zlib=c:/devlibs/zlib-1.2.7 \
+                            --without-iconv --without-docbook"
+
+checking build system type... i686-pc-mingw32
+checking host system type... i686-pc-mingw32
+...
+checking for ld used by gcc... c:/devkit-4.7.1/mingw/i686-w64-mingw32/bin/ld.exe
+...
+Checking zlib
+checking zlib.h usability... yes
+checking zlib.h presence... yes
+checking for zlib.h... yes
+checking for gzread in -lz... yes
+...
+checking lzma.h presence... no
+...
+checking whether to enable IPv6... no
+...
+Found Python version 2.7
+could not find python2.7/Python.h or /include/Python.h
+./configure: line 14262: python2.7-config: command not found
+Checking configuration requirements
+Enabling multithreaded support
+Disabling Docbook support
+Disabling ICONV support
+Disabling ICU support
+Enabled Schematron support
+Enabled Schemas/Relax-NG support
+...
+Done configuring
+
+C:\temp\libxml2-2.8.0>make
+...
+make[1]: Leaving directory `/c/temp/libxml2-2.8.0'
+
+</pre>
+
+To test the libxml2 API using the generated `testapi.exe` helper, first, add the
+following file to the `C:\temp\libxml2-2.8.0` source directory.
+
+{% highlight xml linenos %}
+<!-- file: gatolog.xml -->
+
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+
+  <system systemId="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"
+    uri="dtd/xhtml1/xhtml1-strict.dtd"/>
+ 
+  <system systemId="http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
+    uri="dtd/xhtml1/xhtml1-transitional.dtd"/>
+ 
+  <system systemId="http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"
+    uri="dtd/xhtml11/xhtml11-flat.dtd"/>
+
+</catalog>
+{% endhighlight %}
+
+Finally, grab a cup of [Rishi Masala Chai tea](http://www.rishi-tea.com/category/chai),
+set an env var, and fire off the API tests.
+
+<pre class="shell">
+C:\temp\libxml2-2.8.0>set XML_CATALOG_FILES=C:/temp/libxml2-2.8.0/gatolog.xml
+
+C:\temp\libxml2-2.8.0>testapi.exe
+Testing HTMLparser : 32 of 38 functions ...
+Testing HTMLtree : 18 of 18 functions ...
+Testing SAX2 : 38 of 38 functions ...
+...
+Testing nanoftp : 14 of 22 functions ...
+Testing nanohttp : 13 of 17 functions ...
+Testing parser : 61 of 70 functions ...
+Testing parserInternals : 33 of 90 functions ...
+...
+Testing relaxng : 14 of 24 functions ...
+...
+Testing xmlIO : 39 of 48 functions ...
+...
+Testing xmlreader : 76 of 86 functions ...
+...
+Testing xmlschemas : 15 of 25 functions ...
+Testing xmlschemastypes : 26 of 34 functions ...
+...
+Testing xmlwriter : 51 of 79 functions ...
+Testing xpath : 30 of 38 functions ...
+Testing xpathInternals : 106 of 117 functions ...
+Testing xpointer : 17 of 21 functions ...
+Total: 1161 functions, 291375 tests, 0 errors
+
+</pre>
