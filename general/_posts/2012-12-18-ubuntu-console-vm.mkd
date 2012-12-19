@@ -1,0 +1,70 @@
+---
+layout: post
+title: Ubuntu Server VM Console Tweaks
+updated: 2012-12-19T00:57:47-05:00
+---
+
+As technologists, we're blessed with a wealth of interesting and useful tools these days.
+One of my favorites is the [VirtualBox](https://www.virtualbox.org/) virtualization
+product from Oracle. It runs on a variety of host platforms including Windows, Linux,
+and Mac and enables one to easily run another guest operating system. I use VirtualBox
+to run [Arch Linux](https://www.archlinux.org/), [Ubuntu Server](http://www.ubuntu.com/business/server),
+and [Snow Leopard](https://developer.apple.com/technologies/mac/) on my Windows 7 and 8
+hobby hacking notebooks.
+
+I could prattle on about why every self respecting developer should do the same, but
+that's a ditty for another time. Today I'm going to show you one way to fix the puny
+default command line UI of a fresh Ubuntu Server installation on VirtualBox.
+
+On most modern systems, when you fire up a freshly installed console-based VM, you're
+greated by a tiny little window and terrible looking fonts. If you installed a GUI-based
+VM, you can change the default graphics behavior by building and installing the Guest
+Additions.
+
+But how do you change things on a console-based VM? There are a number of ways
+(`setupcon` in `.profile`, deprecated `vga` kernel boot parameter, etc) but I'm going to
+show you a more elegant way using `grub` and an updated initial RAM disk.
+
+## Update Grub
+
+I'll assume you've already installed a `Ubuntu Server 12.10` VM and are sitting at the
+shell prompt.
+
+First, configure `grub` (actually `grub2`) to use a different display resolution and
+grow the tiny VirtualBox VM window by editing `grub`'s defaults and compiling a new
+`/boot/grub/grub.cfg`. On my Windows 8 64bit host system, setting `GRUB_GFXMODE=1024x768x24`
+was the perfect size. You may need to drop into `grub`'s shell and run `vbeinfo` to
+find your systems supported graphic modes.
+
+<pre class="shell">
+jon@ubusvr64:~$ sudo vim /etc/default/grub
+# modify the following configuration variable
+    GRUB_GFXMODE=1024x768x24
+jon@ubusvr64:~$ sudo update-grub
+
+</pre>
+
+## Update the Initial RAM Disk
+
+Next, update your console setup and init RAMdisk environment to use a better looking
+font. You'll tweak a couple configuration variables, copy the desired font to the
+correct location, and update the current init RAMdisk. As my console uses
+`CODESET=Lat15`, I chose the `TerminusBold` font sized at `24x12`.
+
+<pre class="shell">
+jon@ubusvr64:~$ sudo vim /etc/default/console-setup
+# modify the following configuration variables
+    FONTFACE="TerminusBold"
+    FONTSIZE="24x12"
+jon@ubusvr64:~$ sudo cp /usr/share/consolefonts/Lat15-TerminusBold24x12.psf.gz /etc/console-setup
+jon@ubusvr64:~$ cd /etc/console-setup && sudo gzip -d Lat15-TerminusBold24x12.psf.gz
+jon@ubusvr64:~$ sudo update-initramfs -u
+jon@ubusvr64:~$ sudo reboot
+
+</pre>
+
+## Conclusion
+
+As you can see, this was a fairly painless yet elegant way to save your eyes when
+using a console-based Ubuntu Server VM via VirtualBox. If you've discovered a cleaner
+solution, drop me an email.
