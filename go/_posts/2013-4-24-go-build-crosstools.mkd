@@ -1,0 +1,256 @@
+---
+layout: post
+title: Go Build Cross Tools
+---
+
+As those who write multi-platform applications will attest, configuring a reliable
+cross-development environment on Windows can be a chore. If you're developing a
+native app that leverages other open source libraries, you've chosen a path that
+will challenge even the most patient of Zen masters.
+
+Compilers/assemblers/linkers. Headers. Libraries. Build tools. Required source
+tweaks. Library version linking issues. Upstream maintainers with bad attitudes
+immune to your best cajoling. Absurdly clueless decisions by tool suppliers a la
+Microsoft's removal of the command line tools from the Windows 8 SDK after finally
+doing the right thing years ago with th Visual C++ Toolkit 2003. Great, what
+started as a challenging adventure quickly turned into a grinding slog-fest through
+a tarpit infested with brambly roadblocks and fun-sucking vampires.
+
+But, Don Quixote de la MultiPlatform, all is not hopeless. [Go][golang] to the
+rescue.
+
+This post is targeted to quickly getting you set up and productive on a Windows
+development system simply because it has been such a fight in the past. However,
+thanks to the hard work of the Go contributors, setting up a multi-platform
+development system on Windows, Linux, OS X and other platforms is simple. As
+such, all of the info shared below is applicable to building multi-platform Go
+development environments on non-Windows platforms.
+
+## Get and Build Go
+
+The first step toward Go development nirvana is to get a local copy of
+Go's [Mercurial][hg] repo via
+
+<pre class="shell">
+C:\Apps>hg clone https://code.google.com/p/go/ go-hg
+
+C:\Apps>cd go-hg && hg sum
+parent: 16706:37bf155bc780 tip
+ cmd/5g, cmd/6g, cmd/8g: more nil ptr to large struct checks
+branch: default
+commit: 3 unknown (clean)
+update: (current)
+
+</pre>
+
+One of the many fantastic features of Go is that Go provides its own multi-platform
+capable compilers and tools. Even more fantastic is that both the toolchain and
+the Go environment are easily built on Windows 32/64-bit systems with just a simple
+MinGW `gcc` setup.
+
+I've built Go with a number of different MinGW flavors including the 32 and 64-bit
+[gcc 4.8.0 mingw-w64][mblds] flavors. In all cases, the build experience has been
+painless. When I've run into issues, the committers have been
+[fast and easy to work with][gfix].
+
+## Automating Your Cross Builds
+
+One of the most valuable gifts you can give your hacking self is to automate your
+build workflows so you can stay in the zone. This task is often a tooth pulling
+experience, but not with Go. Go's default build helpers work equally well on Linux,
+Windows, and OS X.
+
+While the Go [install documentation][goin] shows how to build the Go environment
+from source, I chose to create the following PowerShell helper to automate building
+my Go environment to support 32-bit Windows, Linux, and OS X platforms. I use a
+slightly more complex version on my Windows 8 system to build for 32/64-bit Linux,
+Windows, and OS X platforms.
+
+{% highlight powershell linenos %}
+# file: build_all.ps1
+
+$toolkit = 'C:\DevKit-mb4.8.0\mingw\bin'
+$targets = 'windows:386:1', 'linux:386:0', 'darwin:386:0'
+
+$orig_path = $env:PATH
+$env:PATH = "$toolkit;$env:PATH"
+
+Push-Location src
+  $targets | % {
+    $env:GOOS, $env:GOARCH, $env:CGO_ENABLED = $_.Split(':')
+    switch ($env:CGO_ENABLED) {
+      '0' { $cmd = 'make.bat --no-clean' }
+      '1' { $cmd = 'all.bat' }
+    }
+
+    Write-Host "`n---> building for $env:GOOS/$env:GOARCH platform`n" `
+               -foregroundcolor yellow
+    Invoke-Expression ".\$cmd"
+  }
+Pop-Location
+
+$env:PATH = $orig_path
+{% endhighlight %}
+
+If you're stuck with using `.bat` files, here's a helper to get you started.
+
+{% highlight bat linenos %}
+:: file: build_all.bat
+
+@echo off
+setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+
+set DEVTOOLSDIR=C:\DevKit-mb4.8.0\mingw\bin
+set PATH=%DEVTOOLSDIR%;%PATH%
+
+pushd src
+
+  echo.
+  echo ---^> building Go for windows 386
+  echo.
+  set GOOS=windows
+  set GOARCH=386
+  set CGO_ENABLED=1
+  call all.bat
+
+  echo.
+  echo ---^> building Go for linux 386
+  echo.
+  set GOOS=linux
+  set CGO_ENABLED=0
+  call make.bat --no-clean
+
+  echo.
+  echo ---^> building Go for darwin 386
+  echo.
+  set GOOS=darwin
+  call make.bat --no-clean
+
+popd
+{% endhighlight %}
+
+## Go Build Multi-platform Apps
+
+Now that you've created a reliable, multi-platform Go development environment, it's
+almost embarassing how easy it is to build Go applications that run on Windows, Linux
+and OS X systems.
+
+In a future post I'll go into more details of other Go goodies such as Go's `#ifdef`
+killer [build contraints][gobldc]. For now, here's a simple Ruby `Rakefile` showing
+how easy it is to build multi-platform Go apps using the `GOOS` and `GOARCH`
+environment variables and the `go` command line tool.
+
+{% highlight ruby linenos %}
+require 'rake/clean'
+require 'rbconfig'
+
+# --- BUILD CONFIGURATION ---
+UPX_EXE = 'C:/Apps/upx/bin/upx.exe'
+S7ZIP_EXE = 'C:/tools/7za.exe'
+# ---------------------------
+
+task :default => :all
+
+BUILD = 'build'
+PKG = File.expand_path('pkg')
+
+CLEAN.include(BUILD)
+CLOBBER.include(PKG)
+
+
+def dev_null
+  if RbConfig::CONFIG['host_os'] =~ /mingw|mswin/
+    'NUL'
+  else
+    '/dev/null'
+  end
+end
+
+desc 'build all OS/arch flavors'
+task :all => ['build:windows_386','build:linux_386','build:darwin_386']
+
+namespace :all do
+  desc 'build and shrink all exes'
+  task :shrink => [:all] do
+    Dir.chdir BUILD do
+      Dir.glob('*').each do |d|
+        Dir.chdir d do
+          Dir.glob('uru*').each do |f|
+            puts "---> upx shrinking #{d} #{f}"
+            system "#{UPX_EXE} -9 #{f} > #{dev_null} 2>&1"
+          end
+        end
+      end
+    end
+  end
+end
+
+namespace :build do
+  desc 'build windows/386'
+  task :windows_386 do |t|
+    puts '---> building uru windows/386 flavor'
+    ENV['GOARCH'] = '386'
+    ENV['GOOS'] = 'windows'
+    ENV['CGO_ENABLED'] = '1'
+    system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt.exe"
+  end
+
+  desc 'build linux/386'
+  task :linux_386 do |t|
+    puts '---> building uru linux/386 flavor'
+    ENV['GOARCH'] = '386'
+    ENV['GOOS'] = 'linux'
+    ENV['CGO_ENABLED'] = '0'
+    system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt"
+  end
+
+  desc 'build darwin/386'
+  task :darwin_386 do |t|
+    puts '---> building uru darwin/386 flavor'
+    ENV['GOARCH'] = '386'
+    ENV['GOOS'] = 'darwin'
+    ENV['CGO_ENABLED'] = '0'
+    system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt"
+  end
+end
+
+desc 'archive all built exes'
+task :package => 'package:all'
+
+directory PKG
+namespace :package do
+  task :all => ['all:shrink',PKG] do
+    ts = Time.now.strftime('%Y%m%dT%H%M')
+    Dir.chdir BUILD do
+      Dir.glob('*').each do |d|
+        case d
+        when /\A(darwin|linux)/
+          puts "---> packaging #{d}"
+          system "#{S7ZIP_EXE} a -tgzip -mx9 uru-#{$1}-#{ts}-bin-x86.gz ./#{d}/*  > #{dev_null} 2>&1"
+          mv "uru-#{$1}-#{ts}-bin-x86.gz", PKG, :verbose => false
+        when /\Awindows/
+          puts "---> packaging #{d}"
+          system "#{S7ZIP_EXE} a -t7z -mx9 uru-windows-#{ts}-bin-x86.7z ./#{d}/* > #{dev_null} 2>&1"
+          mv "uru-windows-#{ts}-bin-x86.7z", PKG, :verbose => false
+        end
+      end
+    end
+  end
+end
+{% endhighlight %}
+
+## Conclusion
+
+As the Go team prepares to release `1.1`, it's a great time to dig into the details
+of how Go can make your multi-platform hacking a lot nicer. It's obvious that the
+team is both experienced and refreshingly pragmatic in their approach to providing
+a great environment for quickly building multi-platform apps. Go take advantage of
+their hard work and expertise!
+
+
+[golang]: http://golang.org/
+[hg]: http://mercurial.selenic.com/downloads/
+[mblds]: http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/
+[gfix]: http://code.google.com/p/go/issues/detail?id=5051
+[goin]: http://golang.org/doc/install/source
+[gobldc]: http://golang.org/pkg/go/build/

@@ -1,0 +1,19 @@
+---
+layout: home
+---
+
+{% for p in site.categories.go %}
+  <div class="first grid1">&nbsp;</div>
+
+  <div class="grid17">
+    <div class="post">
+      <a class="post_title_link" href="{{ p.url }}">{{ p.title }}</a>
+      {{ p.content }}
+      <div class="post_date">Posted: {{ p.date | date: "%B %d, %Y" }}
+        {% if p.updated %}
+          .:. Updated: {{ p.updated | date: "%B %d, %Y" }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
