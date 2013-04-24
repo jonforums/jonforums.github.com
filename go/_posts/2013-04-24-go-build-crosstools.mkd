@@ -12,11 +12,11 @@ Compilers/assemblers/linkers. Headers. Libraries. Build tools. Required source
 tweaks. Library version linking issues. Upstream maintainers with bad attitudes
 immune to your best cajoling. Absurdly clueless decisions by tool suppliers a la
 Microsoft's removal of the command line tools from the Windows 8 SDK after finally
-doing the right thing years ago with th Visual C++ Toolkit 2003. Great, what
+doing the right thing years ago with the Visual C++ Toolkit 2003. Great, what
 started as a challenging adventure quickly turned into a grinding slog-fest through
 a tarpit infested with brambly roadblocks and fun-sucking vampires.
 
-But, Don Quixote de la MultiPlatform, all is not hopeless. [Go][golang] to the
+But, Don Quixote de la MultiPlatform, all is not hopeless. [Go](http://golang.org/) to the
 rescue.
 
 This post is targeted to quickly getting you set up and productive on a Windows
@@ -29,7 +29,7 @@ development environments on non-Windows platforms.
 ## Get and Build Go
 
 The first step toward Go development nirvana is to get a local copy of
-Go's [Mercurial][hg] repo via
+Go's [Mercurial](http://mercurial.selenic.com/downloads/) repo via
 
 <pre class="shell">
 C:\Apps>hg clone https://code.google.com/p/go/ go-hg
@@ -49,9 +49,9 @@ the Go environment are easily built on Windows 32/64-bit systems with just a sim
 MinGW `gcc` setup.
 
 I've built Go with a number of different MinGW flavors including the 32 and 64-bit
-[gcc 4.8.0 mingw-w64][mblds] flavors. In all cases, the build experience has been
-painless. When I've run into issues, the committers have been
-[fast and easy to work with][gfix].
+[gcc 4.8.0 mingw-w64](http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/)
+flavors. In all cases, the build experience has been painless. When I've run into issues,
+the committers have been [fast and easy to work with](http://code.google.com/p/go/issues/detail?id=5051).
 
 ## Automating Your Cross Builds
 
@@ -60,13 +60,13 @@ build workflows so you can stay in the zone. This task is often a tooth pulling
 experience, but not with Go. Go's default build helpers work equally well on Linux,
 Windows, and OS X.
 
-While the Go [install documentation][goin] shows how to build the Go environment
-from source, I chose to create the following PowerShell helper to automate building
-my Go environment to support 32-bit Windows, Linux, and OS X platforms. I use a
-slightly more complex version on my Windows 8 system to build for 32/64-bit Linux,
-Windows, and OS X platforms.
+While the Go [install documentation](http://golang.org/doc/install/source) shows how
+to build the Go environment from source, I chose to create the following PowerShell
+helper to automate building my Go environment to support 32-bit Windows, Linux, and
+OS X platforms. I use a slightly more complex version on my Windows 8 system to build
+for 32/64-bit Linux, Windows, and OS X platforms.
 
-{% highlight powershell linenos %}
+{% highlight posh linenos %}
 # file: build_all.ps1
 
 $toolkit = 'C:\DevKit-mb4.8.0\mingw\bin'
@@ -136,9 +136,9 @@ almost embarassing how easy it is to build Go applications that run on Windows, 
 and OS X systems.
 
 In a future post I'll go into more details of other Go goodies such as Go's `#ifdef`
-killer [build contraints][gobldc]. For now, here's a simple Ruby `Rakefile` showing
-how easy it is to build multi-platform Go apps using the `GOOS` and `GOARCH`
-environment variables and the `go` command line tool.
+killer [build contraints](http://golang.org/pkg/go/build/). For now, here's a simple
+Ruby `Rakefile` showing how easy it is to build multi-platform Go apps using the
+`GOOS` and `GOARCH` environment variables, and the `go` command line tool.
 
 {% highlight ruby linenos %}
 require 'rake/clean'
@@ -246,11 +246,3 @@ of how Go can make your multi-platform hacking a lot nicer. It's obvious that th
 team is both experienced and refreshingly pragmatic in their approach to providing
 a great environment for quickly building multi-platform apps. Go take advantage of
 their hard work and expertise!
-
-
-[golang]: http://golang.org/
-[hg]: http://mercurial.selenic.com/downloads/
-[mblds]: http://sourceforge.net/projects/mingwbuilds/files/host-windows/releases/
-[gfix]: http://code.google.com/p/go/issues/detail?id=5051
-[goin]: http://golang.org/doc/install/source
-[gobldc]: http://golang.org/pkg/go/build/
