@@ -7,7 +7,7 @@ layout: nil
   <title>Jon's Development Blog</title>
   <link rel="self" href="/atom.xml" />
   <link href="http://jonforums.github.io/" />
-  <updated>{{ site.time | date_to_xmlschema }}</updated>
+  <updated>{{ site.time | to_xmlschema }}</updated>
   <id>http://jonforums.github.com/</id>
   <author>
     <name>Jon</name>
@@ -20,9 +20,9 @@ layout: nil
     <id>http://jonforums.github.com{{ post.id }}</id>
     <updated>
       {% if post.updated %}
-        {{ post.updated | date_to_xmlschema }}
+        {{ post.updated | to_xmlschema }}
       {% else %}
-        {{ post.date | date_to_xmlschema }}
+        {{ post.date | to_xmlschema }}
       {% endif %}
     </updated>
     <summary>{{ post.content | truncatewords: 20 | strip_html }}</summary>
