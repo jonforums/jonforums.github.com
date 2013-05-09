@@ -1,6 +1,7 @@
 ---
 layout: post
 title: Go Build Cross Tools
+updated: 2013-05-08T20:27:41-05:00
 ---
 
 As those who write multi-platform applications will attest, configuring a reliable
@@ -151,6 +152,7 @@ S7ZIP_EXE = 'C:/tools/7za.exe'
 
 task :default => :all
 
+ARCH = ENV['GOARCH'] || '386'
 BUILD = 'build'
 PKG = File.expand_path('pkg')
 
@@ -167,7 +169,7 @@ def dev_null
 end
 
 desc 'build all OS/arch flavors'
-task :all => ['build:windows_386','build:linux_386','build:darwin_386']
+task :all => %W[build:windows_#{ARCH} build:linux_#{ARCH} build:darwin_#{ARCH}]
 
 namespace :all do
   desc 'build and shrink all exes'
@@ -186,31 +188,18 @@ namespace :all do
 end
 
 namespace :build do
-  desc 'build windows/386'
-  task :windows_386 do |t|
-    puts '---> building uru windows/386 flavor'
-    ENV['GOARCH'] = '386'
-    ENV['GOOS'] = 'windows'
-    ENV['CGO_ENABLED'] = '1'
-    system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt.exe"
-  end
+  %W[windows:#{ARCH}:0 linux:#{ARCH}:0 darwin:#{ARCH}:0].each do |tgt|
+    os, arch, cgo = tgt.split(':')
+    ext = (os == 'windows' ? '.exe' : '')
 
-  desc 'build linux/386'
-  task :linux_386 do |t|
-    puts '---> building uru linux/386 flavor'
-    ENV['GOARCH'] = '386'
-    ENV['GOOS'] = 'linux'
-    ENV['CGO_ENABLED'] = '0'
-    system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt"
-  end
-
-  desc 'build darwin/386'
-  task :darwin_386 do |t|
-    puts '---> building uru darwin/386 flavor'
-    ENV['GOARCH'] = '386'
-    ENV['GOOS'] = 'darwin'
-    ENV['CGO_ENABLED'] = '0'
-    system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt"
+    desc "build #{os}/#{arch}"
+    task :"#{os}_#{arch}" do |t|
+      puts "---> building uru #{os}_#{arch} flavor"
+      ENV['GOARCH'] = arch
+      ENV['GOOS'] = os
+      ENV['CGO_ENABLED'] = cgo
+      system "go build -o #{BUILD}/#{t.name.split(':')[-1]}/uru_rt#{ext}"
+    end
   end
 end
 
